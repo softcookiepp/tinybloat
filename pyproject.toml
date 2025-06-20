@@ -6,11 +6,11 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 include = [
-  "src/module_name/*.so",
-  "src/module_name/*.dylib",
-  "src/module_name/*.dll",
-  "src/module_name/**/*.py",
-  "src/module_name"
+  "src/tinybloat/*.so",
+  "src/tinybloat/*.dylib",
+  "src/tinybloat/*.dll",
+  "src/tinybloat/**/*.py",
+  "src/tinybloat"
 ]
 
 [tool.hatch.build.targets.wheel.sources]
@@ -20,7 +20,7 @@ include = [
 allow-direct-references = true
 
 [project]
-name = "module_name"
+name = "tinybloat"
 requires-python = ">=3.9"
 dependencies = [
 	"typing",

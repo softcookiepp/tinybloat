@@ -1,6 +1,5 @@
 """Version information"""
 
-PROGRAM_NAME = 'module_name'
+PROGRAM_NAME = 'tinybloat'
 
 __version__ = '0.0.0'
-hip = None
