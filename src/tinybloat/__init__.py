@@ -16,5 +16,22 @@ from . import type_utils
 
 __all__ = [
 	"linalg",
-	"ComplexTensor"
+	"safety_functions",
+	"nn",
+	"F",
+	"type_utils",
+	"ComplexTensor",
+	"diag",
+	"is_tinygrad_module",
+	"module_on_device",
+	"move_to_device",
+	"cast_to_dtype",
+	"nonzero",
+	"cat",
+	"cumprod",
+	"assert_same_device",
+	"chunk",
+	"clamp",
+	"stack",
+	"outer"
 ]

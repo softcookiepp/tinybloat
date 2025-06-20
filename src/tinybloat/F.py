@@ -1,3 +1,6 @@
+"""
+Functions either not present in tinygrad, or are present but have extra capability.
+"""
 import tinygrad
 from .common import assert_same_device
 import numpy as np

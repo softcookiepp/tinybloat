@@ -65,6 +65,9 @@ def is_tinygrad_module(obj):
 	return len(state_dict.keys() ) > 0
 	
 def module_on_device(obj, device: str):
+	"""
+	Returns True if all tinygrad.Tensor members of obj are on device, False if otherwise
+	"""
 	# TODO: canonicalize device
 	state_dict = tinygrad.nn.state.get_state_dict(obj)
 	assert not len(state_dict.keys() ) == 0, "Not a tinygrad module"
