@@ -4,12 +4,15 @@ import numpy as np
 import inspect
 
 class ComplexTensor:
+	"""
+	A tensor class that can be used for operations that require complex numbers.
+	It stores the real and imaginary components as separate tinygrad tensors, but this
+	may change if another means of storage is found to be more optimal.
+	"""
 	def __init__(self,
 				real: Union[tinygrad.Tensor, np.ndarray],
 				imag: Optional[Union[tinygrad.Tensor, np.ndarray]] = None, device = None):
-		"""
-		HELP PLS
-		"""
+		
 		if isinstance(real, np.ndarray):
 			if np.iscomplexobj(real):
 				real, imag = real.real, real.imag
@@ -31,15 +34,22 @@ class ComplexTensor:
 	@property
 	def real(self) -> tinygrad.Tensor:
 		"""
+		The real component of the tensor
 		"""
 		return self._real
 	
 	@property
 	def imag(self) -> tinygrad.Tensor:
+		"""
+		The imaginary component of the tensor
+		"""
 		return self._imag
 	
 	@property
 	def device(self) -> str:
+		"""
+		The device that both the real and imaginary components are stored on.
+		"""
 		return self._real.device
 		
 	@property

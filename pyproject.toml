@@ -25,7 +25,8 @@ requires-python = ">=3.9"
 dependencies = [
 	"typing",
 	"argparse",
-	"pytest>=8.4.0"
+	"pytest>=8.4.0",
+	"pdoc"
 ]
 description = "Extended functionality for tinygrad"
 version = "0.0.1"
