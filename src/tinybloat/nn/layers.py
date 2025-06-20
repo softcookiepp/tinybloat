@@ -1,5 +1,6 @@
 import tinygrad
 from ..common import move_to_device, cast_to_dtype
+from .internal_init import xavier_uniform_
 
 class MultiheadAttention:
 	def __init__(self,
@@ -106,3 +107,39 @@ class MultiheadAttention:
 			# For now, weight just miight be inaccurate :c
 			return out, weight[0:out.shape[0], 0:out.shape[0]]
 		return (out,)
+
+
+class Embedding:
+	def __init__(self, vocab_size:int, embed_size:int):
+		self.vocab_sz, self.embed_sz = vocab_size, embed_size
+		self.weight = tinygrad.Tensor.zeros(vocab_size, embed_size)
+		xavier_uniform_(self.weight )
+	
+	def tg_forward(parent, self, idx):
+		vocab_sz, embed_sz, weight = self.vocab_sz, self.embed_sz, self.weight
+		
+		original_device = idx.device
+		working_device = idx.device
+		
+		if not tg_device_supports_longlong(weight.device):
+			# perform embedding on the CPU as a fallback
+			working_device = "CPU"
+		
+		if not hasattr(parent, 'arange'): parent.arange = tinygrad.Tensor.arange(vocab_sz,
+			requires_grad=False, device=working_device, dtype = highest_precision_int(working_device) ).unsqueeze(-1)
+		big_shp = idx.shape+(vocab_sz, embed_sz)
+		
+		
+		idx = idx.to(working_device)
+		weight = weight.to(working_device)
+		
+		arange, idx, vals = parent.arange.expand(big_shp), idx.reshape(idx.shape+(1, 1)).expand(big_shp), weight.expand(big_shp)
+		
+		# (-1, 77, 49408, -1)
+		inter = (arange == idx)
+		
+		# (-1, 77, 49408, -1)
+		inter2 = inter.mul(vals)
+		out = inter2.sum(-2)
+		
+		return out.to(original_device)
