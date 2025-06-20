@@ -5,11 +5,21 @@ from .common import diag
 from .complex_tensor import ComplexTensor
 
 def norm(A, ord = None, dim = None, keepdim = False, out = None, dtype = None):
+	"""
+	See [torch.linalg.norm](https://docs.pytorch.org/docs/stable/generated/torch.linalg.norm.html)
+	"""
 	if (not ord is None) and ord != 2:
 		raise NotImplementedError(f"Order not implemented for linalg.norm: {ord}")
 	return ( (A**2).sum(axis = dim, keepdim = keepdim) )**0.5
 
 def qr(A, mode = "reduced"):
+	"""
+	Performs QR factorization on an input matrix, returns Q, R as a tuple.
+	
+	Currently implemented in numpy due to lack of knowledge :c
+	
+	See [torch.linalg.qr](https://docs.pytorch.org/docs/stable/generated/torch.linalg.qr.html)
+	"""
 	if not mode is "reduced":
 		raise NotImplementedError(f"mode not implemented for tg_adapter.linalg.qr: {mode}")
 	if True:
@@ -42,6 +52,15 @@ def qr(A, mode = "reduced"):
 		return Q[:n].T, R[:n].triu()
 
 def eig(A, max_iter = 100, tol = 1e-6):
+	"""
+	Computes the eigenvalues and eigenvectors for a given 2D tensor.
+	
+	Returns tuple eigenvalues, eigenvectors
+	
+	Currently implemented in numpy due to lack of knowledge on the subject :c
+	
+	See [torch.linalg.eig](https://docs.pytorch.org/docs/stable/generated/torch.linalg.eig.html)
+	"""
 	Anp = A.numpy()
 	result = np.linalg.eig(Anp)
 	eigenvalues = ComplexTensor(result.eigenvalues, device = A.device)

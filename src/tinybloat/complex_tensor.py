@@ -66,20 +66,35 @@ class ComplexTensor:
 		return self._real.dtype
 		
 	def to(self, *args, **kwargs):
+		"""
+		See [tinygrad.Tensor.to()](https://docs.tinygrad.org/tensor/properties/#tinygrad.Tensor.to)
+		"""
 		return self._tg_override(*args, **kwargs)
 	
 	def to_(self, device):
+		"""
+		See [tinygrad.Tensor.to_()](https://docs.tinygrad.org/tensor/properties/#tinygrad.Tensor.to_)
+		"""
 		self._real.to_(device)
 		self._imag.to_(device)
 		return self
 	
 	def cast(self, *args, **kwargs):
+		"""
+		See [tinygrad.Tensor.cast()](https://docs.tinygrad.org/tensor/properties/#tinygrad.Tensor.cast)
+		"""
 		return self._tg_override(*args, **kwargs)
 	
 	def numel(self):
+		"""
+		See [tinygrad.Tensor.numel()](https://docs.tinygrad.org/tensor/properties/#tinygrad.Tensor.numel)
+		"""
 		return self._real.numel()
 	
 	def replace(self, new):
+		"""
+		Replace this tensor with another.
+		"""
 		# lets be picky about it for now
 		assert isinstance(new, ComplexTensor)
 		self._real.replace(new.real)
@@ -124,12 +139,9 @@ class ComplexTensor:
 	def reshape(self, *args, **kwargs):
 		return self._tg_override(*args, **kwargs)
 		
-	#def transpose(self, *args, **kwargs):
-	#	return self._tg_override(*args, **kwargs)
-	
 	def numpy(self):
 		"""
-		See [tinygrad.Tensor.shape](https://docs.tinygrad.org/tensor/properties/#tinygrad.Tensor.shape)
+		See [tinygrad.Tensor.numpy()](https://docs.tinygrad.org/tensor/properties/#tinygrad.Tensor.numpy)
 		"""
 		return self.real.numpy() + (1j* self.imag.numpy() )
 	
@@ -224,10 +236,11 @@ class ComplexTensor:
 	def __getitem__(self, *args, **kwargs):
 		return self._tg_override(*args, **kwargs)
 	
-	
-		
-			
+
 def convert_to_complex(*inp):
+	"""
+	@private
+	"""
 	if len(inp) == 1:
 		inp = inp[0]
 	if isinstance(inp, ComplexTensor):
@@ -255,7 +268,11 @@ def convert_to_complex(*inp):
 			# inp is a primitive type
 			return inp
 
+
 def convert_to_real(*inp):
+	"""
+	@private
+	"""
 	if len(inp) == 1:
 		inp = inp[0]
 	if isinstance(inp, ComplexTensor):
@@ -284,6 +301,10 @@ def convert_to_real(*inp):
 			return inp
 
 def convert_to_imag(*inp):
+	"""
+	@private
+	Internal function
+	"""
 	if len(inp) == 1:
 		inp = inp[0]
 	if isinstance(inp, ComplexTensor):

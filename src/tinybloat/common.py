@@ -39,6 +39,9 @@ def diag(t, *args, **kwargs):
 
 
 def recursive_get_attribute(obj, key):
+	"""
+	@private
+	"""
 	key_terms = key.split(".")
 	this_key = key_terms[0]
 	try:
@@ -52,6 +55,11 @@ def recursive_get_attribute(obj, key):
 	return val
 
 def is_tinygrad_module(obj):
+	"""
+	Utility method for checking if an object contains tinygrad tensors.
+	
+	Returns True if yes, False if no.
+	"""
 	# here we check if the object has any tinygrad tensors
 	state_dict = tinygrad.nn.state.get_state_dict(obj)
 	return len(state_dict.keys() ) > 0
@@ -66,6 +74,9 @@ def module_on_device(obj, device: str):
 	return True
 
 def move_to_device(obj, device: str):
+	"""
+	Moves all tinygrad.Tensor instance members in an obj to device
+	"""
 	for k, v in tinygrad.nn.state.get_state_dict(obj).items():
 		v.replace(v.to(device) )
 	return obj
