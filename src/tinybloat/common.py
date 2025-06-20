@@ -88,3 +88,63 @@ def nonzero(inp, as_tuple = False):
 	return tinygrad.Tensor(np.concatenate(out_to_cat, axis = 1), device = inp.device)
 	
 	
+def cat(tensors, dim = 0):
+	# is this even necessary??
+	tbase = tensors[0]
+	trest = tuple(tensors[1:])
+	assert_same_device(tbase.device, trest)
+	return tbase.cat(*trest, dim = dim)
+
+def cumprod(inp, dim, dtype=None, out=None):
+	# first, get the slices used in the __getitem__ call for each element
+	slices = []
+	for i in range(len(inp.shape)):
+		slices.append(slice(None, None, None) )
+	
+	outputs = []
+	for i in range(inp.shape[dim] ):
+		slices[dim] = slice(0, i + 1, None)
+		new_shape = list(inp.shape)
+		new_shape[dim] = -1
+		new_shape = tuple(new_shape)
+		outputs.append(inp[slices].prod(dim).reshape(new_shape) )
+	return cat(outputs, dim)
+
+def assert_same_device(dev, *inp):
+	dev = tinygrad.Device.canonicalize(dev)
+	if len(inp) == 1:
+		inp = inp[0]
+	if hasattr(inp, "tg"):
+		assert dev == inp.tg.device
+	if isinstance(inp, tinygrad.Tensor):
+		assert dev == inp.device
+	elif isinstance(inp, list) or isinstance(inp, tuple):
+		for item in inp:
+			assert_same_device(dev, item)
+	elif isinstance(inp, dict):
+		for k, v in inp.items():
+			assert_same_device(dev, v)
+		return inp
+	else:
+		if hasattr(inp, "__dict__"):
+			# treat as dictionary hehe
+			assert_same_device(dev, inp.__dict__)
+			
+def chunk(inp, chunks: int, dim: int = 0):
+	return inp.chunk(chunks, dim)
+	
+def clamp(inp, min = None, max = None):
+	return inp.clamp(min, max)
+	
+def stack(tensors, dim = 0, out = None):
+	assert out is None
+	tbase = tensors[0]
+	trest = tuple(tensors[1:])
+	assert_same_device(tbase.device, trest)
+	return tbase.stack(*trest, dim = dim)
+
+def outer(u, v):
+	assert len(u.shape) == len(v.shape) == 1, "Both supplied tensors must be 1D"
+	u_expanded = u.reshape(-1, 1).expand(-1, v.shape[0])
+	v_expanded = v.reshape(1, -1).expand(u.shape[0], -1)
+	return u_expanded * v_expanded

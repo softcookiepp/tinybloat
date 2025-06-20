@@ -42,9 +42,9 @@ def qr(A, mode = "reduced"):
 		return Q[:n].T, R[:n].triu()
 
 def eig(A, max_iter = 100, tol = 1e-6):
-	Anp = A.tg.numpy()
+	Anp = A.numpy()
 	result = np.linalg.eig(Anp)
-	eigenvalues = ComplexTensor(result.eigenvalues, device = A.tg.device)
-	eigenvectors = ComplexTensor(result.eigenvectors, device = A.tg.device)
+	eigenvalues = ComplexTensor(result.eigenvalues, device = A.device)
+	eigenvectors = ComplexTensor(result.eigenvectors, device = A.device)
 	
 	return eigenvalues, eigenvectors

@@ -1,5 +1,5 @@
 import tinygrad
-from .common import move_to_device, cast_to_dtype
+from ..common import move_to_device, cast_to_dtype
 
 class MultiheadAttention:
 	def __init__(self,

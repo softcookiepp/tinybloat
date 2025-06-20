@@ -27,5 +27,5 @@ dependencies = [
 	"argparse",
 	"pytest>=8.4.0"
 ]
-description = "Template for creating python projects"
-version = "0.0.0"
+description = "Extended functionality for tinygrad"
+version = "0.0.1"
