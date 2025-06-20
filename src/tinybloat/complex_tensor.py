@@ -12,7 +12,6 @@ class ComplexTensor:
 	def __init__(self,
 				real: Union[tinygrad.Tensor, np.ndarray],
 				imag: Optional[Union[tinygrad.Tensor, np.ndarray]] = None, device = None):
-		
 		if isinstance(real, np.ndarray):
 			if np.iscomplexobj(real):
 				real, imag = real.real, real.imag
@@ -72,7 +71,10 @@ class ComplexTensor:
 	
 	@property
 	def dtype(self):
-		# tinygrad has no complex dtypes
+		"""
+		Unlike numpy or pytorch, tinygrad does not have complex64 and complex128 dtypes.
+		Because of this, the underlying tinygrad dtype of the real component is returned instead.
+		"""
 		return self._real.dtype
 		
 	def to(self, *args, **kwargs):

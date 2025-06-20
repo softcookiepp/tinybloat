@@ -20,6 +20,8 @@ __all__ = [
 	"nn",
 	"F",
 	"type_utils",
+	"testing",
+	
 	"ComplexTensor",
 	"diag",
 	"is_tinygrad_module",
