@@ -88,6 +88,18 @@ def cast_to_dtype(obj, dtype: tinygrad.dtype.DType):
 	for k, v in tinygrad.nn.state.get_state_dict(obj).items():
 		v.replace(v.cast(dtype) )
 	return obj
+
+def limit_float_precision(obj, low: Union[tinygrad.dtype.DType, None], high: Union[tinygrad.dtype.DType, None]):
+	"""
+	Limit the precision of a given module's floating point tensors
+	"""
+	raise NotImplementedError
+
+def limit_int_precision(obj, low: Union[tinygrad.dtype.DType, None], high: Union[tinygrad.dtype.DType, None]):
+	"""
+	Limit the precision of a given module's integer tensors.
+	"""
+	raise NotImplementedError
 	
 def nonzero(inp, as_tuple = False):
 	# It is going to be very difficult to write this function
