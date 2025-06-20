@@ -7,6 +7,9 @@ class ComplexTensor:
 	def __init__(self,
 				real: Union[tinygrad.Tensor, np.ndarray],
 				imag: Optional[Union[tinygrad.Tensor, np.ndarray]] = None, device = None):
+		"""
+		HELP PLS
+		"""
 		if isinstance(real, np.ndarray):
 			if np.iscomplexobj(real):
 				real, imag = real.real, real.imag
@@ -26,15 +29,17 @@ class ComplexTensor:
 		assert self._real.device == self._imag.device
 	
 	@property
-	def real(self):
+	def real(self) -> tinygrad.Tensor:
+		"""
+		"""
 		return self._real
 	
 	@property
-	def imag(self):
+	def imag(self) -> tinygrad.Tensor:
 		return self._imag
 	
 	@property
-	def device(self):
+	def device(self) -> str:
 		return self._real.device
 		
 	@property
@@ -43,10 +48,16 @@ class ComplexTensor:
 		
 	@property
 	def T(self):
+		"""
+		See [tinygrad.Tensor.T](https://docs.tinygrad.org/tensor/properties/#tinygrad.Tensor.T)
+		"""
 		return ComplexTensor(self._real.T, self._imag.T)
 		
 	@property
 	def shape(self):
+		"""
+		See [tinygrad.Tensor.shape](https://docs.tinygrad.org/tensor/properties/#tinygrad.Tensor.shape)
+		"""
 		return self._real.shape
 	
 	@property
@@ -117,6 +128,9 @@ class ComplexTensor:
 	#	return self._tg_override(*args, **kwargs)
 	
 	def numpy(self):
+		"""
+		See [tinygrad.Tensor.shape](https://docs.tinygrad.org/tensor/properties/#tinygrad.Tensor.shape)
+		"""
 		return self.real.numpy() + (1j* self.imag.numpy() )
 	
 	def __add__(self, other):

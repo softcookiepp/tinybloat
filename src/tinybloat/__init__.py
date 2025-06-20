@@ -6,3 +6,4 @@ from .memory import *
 from . import nn
 from . import F
 from .compatibility import *
+from . import type_utils

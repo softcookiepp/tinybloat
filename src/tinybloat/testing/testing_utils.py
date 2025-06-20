@@ -385,7 +385,6 @@ def _test_hf_reimplementation(args, kwargs, hf_module, hf_method, my_module, my_
 		# just use default tinygrad device
 		# still need to write a function that lets you move a module to device
 		device = tinygrad.Device.DEFAULT
-		assert device == "GPU", f"Device is {device}"
 		tinybloat.move_to_device(my_module, device)
 	hf_args, my_args = [], []
 	for arg in args:
