@@ -20,3 +20,21 @@ def device_supports_longlong(dev: str) -> bool:
 	if dev in _longlong_support_status.keys():
 		return _longlong_support_status[dev]
 	return _device_supports_longlong(dev)
+
+def probe_tg_dtypes(tg_device: str):
+	supported_dtypes = []
+	unsupported_dtypes = []
+	for dt in iter_tg_dtypes():
+		if dt == tinygrad.dtypes.void:
+			# torch has no void, and almost no backends support handling it directly
+			continue
+		
+		# this is where we probe
+		if is_dtype_supported(dt, tg_device):
+			supported_dtypes.append(dt)
+		else:
+			unsupported_dtypes.append(dt)
+	return supported_dtypes, unsupported_dtypes
+
+def assert_dtype_supported(device: str, dtype: tinygrad.dtype.DType):
+	raise NotImplementedError

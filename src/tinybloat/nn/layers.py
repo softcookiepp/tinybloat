@@ -1,6 +1,7 @@
 import tinygrad
 from ..common import move_to_device, cast_to_dtype
 from .init import xavier_uniform_
+from ..compatibility import device_supports_longlong
 
 class MultiheadAttention:
 	def __init__(self,
