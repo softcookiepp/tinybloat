@@ -16,7 +16,9 @@ class MultiheadAttention:
 				device=None,
 				dtype=None
 			):
-		
+		"""
+		Near-exact reimplementation of [torch.nn.MultiheadAttention](https://docs.pytorch.org/docs/stable/generated/torch.nn.MultiheadAttention.html)
+		"""
 		if embed_dim <= 0 or num_heads <= 0:
 			raise ValueError(
 				f"embed_dim and num_heads must be greater than 0,"
@@ -62,8 +64,12 @@ class MultiheadAttention:
 		self.max_self_attn_cache_len = 512 # lets just try this lol
 
 	def __call__(self, q, k, v, key_padding_mask = None,
-			need_weights = True, attn_mask = None,
+			need_weights = False, attn_mask = None,
 			average_attn_weights = False, is_causal = False):
+		"""
+		`need_weights` is `False` by default, since `tinygrad.Tensor.scaled_dot_product_attention` has no such option.
+		As such it is not yet implemented :c
+		"""
 		if True in (not key_padding_mask is None, average_attn_weights, is_causal):
 			# not going to bother with these for now
 			raise NotImplementedError
