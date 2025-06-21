@@ -1,5 +1,9 @@
 import tinygrad
+from tinygrad.device import is_dtype_supported
 import numpy as np
+from .type_utils import is_floating_point, FLOAT_TYPES
+from .safety_functions import cast
+from typing import Union
 
 def _slice_to_square(t, offset = 0):
 	if len(t.shape) == 1:
@@ -89,11 +93,51 @@ def cast_to_dtype(obj, dtype: tinygrad.dtype.DType):
 		v.replace(v.cast(dtype) )
 	return obj
 
+def replace_dtype(obj, to_replace, replace_with):
+	"""
+	Replace one dtype with another
+	"""
+	for k, v in tinygrad.nn.state.get_state_dict(obj).items():
+		if v.dtype == to_replace:
+			v.replace( v.to("CPU").cast(replace_with).to(v.device) )
+	return obj
+
 def limit_float_precision(obj, low: Union[tinygrad.dtype.DType, None], high: Union[tinygrad.dtype.DType, None]):
 	"""
 	Limit the precision of a given module's floating point tensors
 	"""
-	raise NotImplementedError
+	low_size = 0
+	if isinstance(low, tinygrad.dtype.DType):
+		low_size = low.itemsize
+	high_size = np.inf
+	if isinstance(high, tinygrad.dtype.DType):
+		high_size = high.itemsize
+	sd = tinygrad.nn.state.get_state_dict(obj)
+	for k, v in sd.items():
+		if is_floating_point(v):
+			if v.dtype.itemsize > high_size:
+				# get next step down
+				target_type = None
+				for ft in sorted(FLOAT_TYPES, key = lambda x: -1 * x.itemsize):
+					if ft.itemsize <= high_size and is_dtype_supported(ft, v.device):
+						target_type = ft
+						break
+				assert not target_type is None
+				# Now we just need to cast!
+				sd[k].replace(cast(v, target_type) )
+				assert v.dtype == target_type
+			elif v.dtype.itemsize < low_size:
+				# get next step up
+				target_type = None
+				for ft in sorted(FLOAT_TYPES, key = lambda x: x.itemsize):
+					if ft.itemsize >= low_size and is_dtype_supported(ft, v.device):
+						target_type = ft
+						break
+				assert not target_type is None
+				sd[k].replace(cast(v, target_type) )
+				assert v.dtype == target_type
+			
+	return obj
 
 def limit_int_precision(obj, low: Union[tinygrad.dtype.DType, None], high: Union[tinygrad.dtype.DType, None]):
 	"""

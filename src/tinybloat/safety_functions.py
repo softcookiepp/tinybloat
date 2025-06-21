@@ -3,6 +3,7 @@
 # Therefore, some will be reimplemented here.
 import tinygrad
 import numpy as np
+from typing import Union
 
 def max(inp, dim = None, axis = None, keepdim = False, always_return_argmax = False):
 	if dim is None:
@@ -54,3 +55,7 @@ def max(inp, dim = None, axis = None, keepdim = False, always_return_argmax = Fa
 def argmax(inp, dim = None, axis = None, keepdim = False):
 	_max, _argmax = max(inp, dim, axis, keepdim, True)
 	return _argmax
+
+def cast(t, dt):
+	dev = t.device
+	return t.to("CPU").cast(dt).to(dev)

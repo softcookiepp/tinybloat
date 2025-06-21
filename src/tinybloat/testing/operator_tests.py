@@ -236,3 +236,14 @@ def test_nonzero():
 		return tinybloat.nonzero(t)
 		
 	_test_function([a], {}, f, f)
+
+def test_limit_float_precision():
+	class DummyModule:
+		def __init__(self):
+			self.too_high = tinygrad.Tensor.arange(4, device = "CPU").cast(tinygrad.dtypes.double)
+			self.too_low = tinygrad.Tensor.arange(4, device = "CPU").cast(tinygrad.dtypes.half)
+			
+	dummy = DummyModule()
+	tinybloat.limit_float_precision(dummy, tinygrad.dtypes.float, tinygrad.dtypes.float)
+	for k, v in tinygrad.nn.state.get_state_dict(dummy).items():
+		assert v.dtype == tinygrad.dtypes.float, f"here is the dtype: {v.dtype}"
