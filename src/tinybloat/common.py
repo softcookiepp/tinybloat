@@ -3,7 +3,7 @@ from tinygrad.device import is_dtype_supported
 import numpy as np
 from .type_utils import is_floating_point, FLOAT_TYPES
 from .safety_functions import cast
-from typing import Union
+from typing import Union, Optional
 
 def _slice_to_square(t, offset = 0):
 	if len(t.shape) == 1:
@@ -102,7 +102,10 @@ def replace_dtype(obj, to_replace, replace_with):
 			v.replace( v.to("CPU").cast(replace_with).to(v.device) )
 	return obj
 
-def limit_float_precision(obj, low: Union[tinygrad.dtype.DType, None], high: Union[tinygrad.dtype.DType, None]):
+def limit_float_precision(obj,
+		low: Union[tinygrad.dtype.DType, None],
+		high: Union[tinygrad.dtype.DType, None],
+		new_device: Optional[str] = None):
 	"""
 	Limit the precision of a given module's floating point tensors
 	"""
@@ -114,6 +117,8 @@ def limit_float_precision(obj, low: Union[tinygrad.dtype.DType, None], high: Uni
 		high_size = high.itemsize
 	sd = tinygrad.nn.state.get_state_dict(obj)
 	for k, v in sd.items():
+		if new_device is None:
+			new_device = v.device
 		if is_floating_point(v):
 			if v.dtype.itemsize > high_size:
 				# get next step down
@@ -124,7 +129,7 @@ def limit_float_precision(obj, low: Union[tinygrad.dtype.DType, None], high: Uni
 						break
 				assert not target_type is None
 				# Now we just need to cast!
-				sd[k].replace(cast(v, target_type) )
+				sd[k].replace(cast(v, target_type).to(new_device) )
 				assert v.dtype == target_type
 			elif v.dtype.itemsize < low_size:
 				# get next step up
@@ -134,7 +139,7 @@ def limit_float_precision(obj, low: Union[tinygrad.dtype.DType, None], high: Uni
 						target_type = ft
 						break
 				assert not target_type is None
-				sd[k].replace(cast(v, target_type) )
+				sd[k].replace(cast(v, target_type).to(new_device) )
 				assert v.dtype == target_type
 			
 	return obj
