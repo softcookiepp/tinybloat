@@ -10,3 +10,8 @@ coming soon :c
 ## Documentation
 Simply open docs/index.html in your browser of choice, or run the following command to open a documentation webserver:
 `pdoc src/tinybloat`
+
+## Contributing
+Contributions to this codebase require only 2 things:
+1) New functionality must have docstrings that describe its use in some capacity.
+2) Unit tests must be written to validate it against the original implementation (usually pytorch or numpy.)
