@@ -247,3 +247,25 @@ def test_limit_float_precision():
 	tinybloat.limit_float_precision(dummy, tinygrad.dtypes.float, tinygrad.dtypes.float)
 	for k, v in tinygrad.nn.state.get_state_dict(dummy).items():
 		assert v.dtype == tinygrad.dtypes.float, f"here is the dtype: {v.dtype}"
+
+def test_limit_sint_precision():
+	class DummyModule:
+		def __init__(self):
+			self.too_high = tinygrad.Tensor.arange(4, device = "CPU").cast(tinygrad.dtypes.int64)
+			self.too_low = tinygrad.Tensor.arange(4, device = "CPU").cast(tinygrad.dtypes.int8)
+			
+	dummy = DummyModule()
+	tinybloat.limit_sint_precision(dummy, tinygrad.dtypes.int16, tinygrad.dtypes.int32)
+	assert dummy.too_high.dtype == tinygrad.dtypes.int32
+	assert dummy.too_low.dtype == tinygrad.dtypes.int16
+
+def test_limit_uint_precision():
+	class DummyModule:
+		def __init__(self):
+			self.too_high = tinygrad.Tensor.arange(4, device = "CPU").cast(tinygrad.dtypes.uint64)
+			self.too_low = tinygrad.Tensor.arange(4, device = "CPU").cast(tinygrad.dtypes.uint8)
+			
+	dummy = DummyModule()
+	tinybloat.limit_uint_precision(dummy, tinygrad.dtypes.uint16, tinygrad.dtypes.uint32)
+	assert dummy.too_high.dtype == tinygrad.dtypes.uint32
+	assert dummy.too_low.dtype == tinygrad.dtypes.uint16

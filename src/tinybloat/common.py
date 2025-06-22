@@ -1,7 +1,6 @@
 import tinygrad
 from tinygrad.device import is_dtype_supported
 import numpy as np
-from .type_utils import is_floating_point, FLOAT_TYPES
 from .safety_functions import cast
 from typing import Union, Optional
 
@@ -102,13 +101,14 @@ def replace_dtype(obj, to_replace, replace_with):
 			v.replace( v.to("CPU").cast(replace_with).to(v.device) )
 	return obj
 
-def limit_float_precision(obj,
-		low: Union[tinygrad.dtype.DType, None],
-		high: Union[tinygrad.dtype.DType, None],
-		new_device: Optional[str] = None):
-	"""
-	Limit the precision of a given module's floating point tensors
-	"""
+def _limit_dtype_group_precision(obj,
+			low: Union[tinygrad.dtype.DType, None],
+			high: Union[tinygrad.dtype.DType, None],
+			new_device,
+			dtype_list,
+			dtype_eval_function
+		):
+	assert len(dtype_list) > 0
 	low_size = 0
 	if isinstance(low, tinygrad.dtype.DType):
 		low_size = low.itemsize
@@ -119,11 +119,11 @@ def limit_float_precision(obj,
 	for k, v in sd.items():
 		if new_device is None:
 			new_device = v.device
-		if is_floating_point(v):
+		if dtype_eval_function(v.dtype):
 			if v.dtype.itemsize > high_size:
 				# get next step down
 				target_type = None
-				for ft in sorted(FLOAT_TYPES, key = lambda x: -1 * x.itemsize):
+				for ft in sorted(dtype_list, key = lambda x: -1 * x.itemsize):
 					if ft.itemsize <= high_size and is_dtype_supported(ft, v.device):
 						target_type = ft
 						break
@@ -134,21 +134,46 @@ def limit_float_precision(obj,
 			elif v.dtype.itemsize < low_size:
 				# get next step up
 				target_type = None
-				for ft in sorted(FLOAT_TYPES, key = lambda x: x.itemsize):
+				for ft in sorted(dtype_list, key = lambda x: x.itemsize):
 					if ft.itemsize >= low_size and is_dtype_supported(ft, v.device):
 						target_type = ft
 						break
 				assert not target_type is None
 				sd[k].replace(cast(v, target_type).to(new_device) )
 				assert v.dtype == target_type
-			
 	return obj
 
-def limit_int_precision(obj, low: Union[tinygrad.dtype.DType, None], high: Union[tinygrad.dtype.DType, None]):
+def limit_float_precision(obj,
+			low: Union[tinygrad.dtype.DType, None],
+			high: Union[tinygrad.dtype.DType, None],
+			new_device = None
+		):
 	"""
-	Limit the precision of a given module's integer tensors.
+	Limit the precision of a given module's float tensors.
 	"""
-	raise NotImplementedError
+	return _limit_dtype_group_precision(obj, low, high, new_device, tinygrad.dtypes.floats, tinygrad.dtypes.is_float)
+	
+def limit_sint_precision(obj,
+			low: Union[tinygrad.dtype.DType, None],
+			high: Union[tinygrad.dtype.DType, None],
+			new_device = None
+		):
+	"""
+	Limit the precision of a given module's signed integer tensors.
+	"""
+	is_signed_int = lambda x: tinygrad.dtypes.is_int(x) and (not tinygrad.dtypes.is_unsigned(x) )
+	return _limit_dtype_group_precision(obj, low, high, new_device, tinygrad.dtypes.sints, is_signed_int)
+
+def limit_uint_precision(obj,
+			low: Union[tinygrad.dtype.DType, None],
+			high: Union[tinygrad.dtype.DType, None],
+			new_device = None
+		):
+	"""
+	Limit the precision of a given module's unsigned integer tensors.
+	"""
+	is_unsigned_int = lambda x: tinygrad.dtypes.is_int(x) and tinygrad.dtypes.is_unsigned(x)
+	return _limit_dtype_group_precision(obj, low, high, new_device, tinygrad.dtypes.uints, is_unsigned_int)
 	
 def nonzero(inp, as_tuple = False):
 	# It is going to be very difficult to write this function

@@ -103,7 +103,7 @@ def _test_all_submodules(torch_module, tg_module):
 			_test_submodule(torch_sub, tg_sub)
 
 def compare_state_dicts(torch_module, tga_module, error_threshold = 1.0e-9):
-	print(type(torch_module), type(tga_module) )
+	#print(type(torch_module), type(tga_module) )
 	torch_sd = torch_module.state_dict()
 	try:
 		tga_sd = tga_module.state_dict()

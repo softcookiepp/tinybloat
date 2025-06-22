@@ -29,4 +29,4 @@ dependencies = [
 	"pdoc"
 ]
 description = "Extended functionality for tinygrad"
-version = "0.0.1"
+version = "0.0.3"

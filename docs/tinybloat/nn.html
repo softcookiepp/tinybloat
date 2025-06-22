@@ -27,11 +27,61 @@
                    pattern=".+" required>
 
 
-            <h2>Submodules</h2>
-            <ul>
-                    <li><a href="nn/init.html">init</a></li>
-                    <li><a href="nn/layers.html">layers</a></li>
-            </ul>
+
+            <h2>API Documentation</h2>
+                <ul class="memberlist">
+            <li>
+                    <a class="class" href="#MultiheadAttention">MultiheadAttention</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#MultiheadAttention.__init__">MultiheadAttention</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#MultiheadAttention.embed_dim">embed_dim</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#MultiheadAttention.kdim">kdim</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#MultiheadAttention.vdim">vdim</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#MultiheadAttention.num_heads">num_heads</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#MultiheadAttention.dropout">dropout</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#MultiheadAttention.batch_first">batch_first</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#MultiheadAttention.head_dim">head_dim</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#MultiheadAttention.out_proj">out_proj</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#MultiheadAttention.add_zero_attn">add_zero_attn</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#MultiheadAttention.max_self_attn_cache_len">max_self_attn_cache_len</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
+                    <a class="class" href="#Embedding">Embedding</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#Embedding.__init__">Embedding</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Embedding.weight">weight</a>
+                        </li>
+                </ul>
+
+            </li>
+    </ul>
 
 
 
@@ -54,10 +104,458 @@
 
                         <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos">1</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.layers</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 </span><span id="L-2"><a href="#L-2"><span class="linenos">2</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">init</span>
+</span><span id="L-3"><a href="#L-3"><span class="linenos">3</span></a>
+</span><span id="L-4"><a href="#L-4"><span class="linenos">4</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="L-5"><a href="#L-5"><span class="linenos">5</span></a>	<span class="s2">&quot;MultiheadAttention&quot;</span><span class="p">,</span>
+</span><span id="L-6"><a href="#L-6"><span class="linenos">6</span></a>	<span class="s2">&quot;Embedding&quot;</span>
+</span><span id="L-7"><a href="#L-7"><span class="linenos">7</span></a><span class="p">]</span>
 </span></pre></div>
 
 
             </section>
+                <section id="MultiheadAttention">
+                            <input id="MultiheadAttention-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr class">
+            
+    <span class="def">class</span>
+    <span class="name">MultiheadAttention</span>:
+
+                <label class="view-source-button" for="MultiheadAttention-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#MultiheadAttention"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="MultiheadAttention-7"><a href="#MultiheadAttention-7"><span class="linenos">  7</span></a><span class="k">class</span><span class="w"> </span><span class="nc">MultiheadAttention</span><span class="p">:</span>
+</span><span id="MultiheadAttention-8"><a href="#MultiheadAttention-8"><span class="linenos">  8</span></a><span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="MultiheadAttention-9"><a href="#MultiheadAttention-9"><span class="linenos">  9</span></a><span class="sd">	Near-exact reimplementation of [torch.nn.MultiheadAttention](https://docs.pytorch.org/docs/stable/generated/torch.nn.MultiheadAttention.html)</span>
+</span><span id="MultiheadAttention-10"><a href="#MultiheadAttention-10"><span class="linenos"> 10</span></a><span class="sd">	&quot;&quot;&quot;</span>
+</span><span id="MultiheadAttention-11"><a href="#MultiheadAttention-11"><span class="linenos"> 11</span></a>	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">,</span>
+</span><span id="MultiheadAttention-12"><a href="#MultiheadAttention-12"><span class="linenos"> 12</span></a>				<span class="n">num_heads</span><span class="p">,</span>
+</span><span id="MultiheadAttention-13"><a href="#MultiheadAttention-13"><span class="linenos"> 13</span></a>				<span class="n">dropout</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span><span id="MultiheadAttention-14"><a href="#MultiheadAttention-14"><span class="linenos"> 14</span></a>				<span class="n">bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="MultiheadAttention-15"><a href="#MultiheadAttention-15"><span class="linenos"> 15</span></a>				<span class="n">add_bias_kv</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="MultiheadAttention-16"><a href="#MultiheadAttention-16"><span class="linenos"> 16</span></a>				<span class="n">add_zero_attn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="MultiheadAttention-17"><a href="#MultiheadAttention-17"><span class="linenos"> 17</span></a>				<span class="n">kdim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vdim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="MultiheadAttention-18"><a href="#MultiheadAttention-18"><span class="linenos"> 18</span></a>				<span class="n">batch_first</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="MultiheadAttention-19"><a href="#MultiheadAttention-19"><span class="linenos"> 19</span></a>				<span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="MultiheadAttention-20"><a href="#MultiheadAttention-20"><span class="linenos"> 20</span></a>				<span class="n">dtype</span><span class="o">=</span><span class="kc">None</span>
+</span><span id="MultiheadAttention-21"><a href="#MultiheadAttention-21"><span class="linenos"> 21</span></a>			<span class="p">):</span>
+</span><span id="MultiheadAttention-22"><a href="#MultiheadAttention-22"><span class="linenos"> 22</span></a><span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="MultiheadAttention-23"><a href="#MultiheadAttention-23"><span class="linenos"> 23</span></a><span class="sd">		:param embed_dim: Total dimension of the model.</span>
+</span><span id="MultiheadAttention-24"><a href="#MultiheadAttention-24"><span class="linenos"> 24</span></a><span class="sd">		:param num_heads:</span>
+</span><span id="MultiheadAttention-25"><a href="#MultiheadAttention-25"><span class="linenos"> 25</span></a><span class="sd">		:param dropout:</span>
+</span><span id="MultiheadAttention-26"><a href="#MultiheadAttention-26"><span class="linenos"> 26</span></a><span class="sd">		:param bias:</span>
+</span><span id="MultiheadAttention-27"><a href="#MultiheadAttention-27"><span class="linenos"> 27</span></a><span class="sd">		:param add_bias_kv:</span>
+</span><span id="MultiheadAttention-28"><a href="#MultiheadAttention-28"><span class="linenos"> 28</span></a><span class="sd">		:param add_zero_attn:</span>
+</span><span id="MultiheadAttention-29"><a href="#MultiheadAttention-29"><span class="linenos"> 29</span></a><span class="sd">		:param kdim:</span>
+</span><span id="MultiheadAttention-30"><a href="#MultiheadAttention-30"><span class="linenos"> 30</span></a><span class="sd">		:param vdim:</span>
+</span><span id="MultiheadAttention-31"><a href="#MultiheadAttention-31"><span class="linenos"> 31</span></a><span class="sd">		:param batch_first:</span>
+</span><span id="MultiheadAttention-32"><a href="#MultiheadAttention-32"><span class="linenos"> 32</span></a><span class="sd">		:param device:</span>
+</span><span id="MultiheadAttention-33"><a href="#MultiheadAttention-33"><span class="linenos"> 33</span></a><span class="sd">		:param dtype:</span>
+</span><span id="MultiheadAttention-34"><a href="#MultiheadAttention-34"><span class="linenos"> 34</span></a><span class="sd">		&quot;&quot;&quot;</span>
+</span><span id="MultiheadAttention-35"><a href="#MultiheadAttention-35"><span class="linenos"> 35</span></a>		<span class="k">if</span> <span class="n">embed_dim</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">num_heads</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="MultiheadAttention-36"><a href="#MultiheadAttention-36"><span class="linenos"> 36</span></a>			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="MultiheadAttention-37"><a href="#MultiheadAttention-37"><span class="linenos"> 37</span></a>				<span class="sa">f</span><span class="s2">&quot;embed_dim and num_heads must be greater than 0,&quot;</span>
+</span><span id="MultiheadAttention-38"><a href="#MultiheadAttention-38"><span class="linenos"> 38</span></a>				<span class="sa">f</span><span class="s2">&quot; got embed_dim=</span><span class="si">{</span><span class="n">embed_dim</span><span class="si">}</span><span class="s2"> and num_heads=</span><span class="si">{</span><span class="n">num_heads</span><span class="si">}</span><span class="s2"> instead&quot;</span>
+</span><span id="MultiheadAttention-39"><a href="#MultiheadAttention-39"><span class="linenos"> 39</span></a>			<span class="p">)</span>
+</span><span id="MultiheadAttention-40"><a href="#MultiheadAttention-40"><span class="linenos"> 40</span></a>		<span class="n">factory_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;device&quot;</span><span class="p">:</span> <span class="n">device</span><span class="p">,</span> <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="n">dtype</span><span class="p">}</span>
+</span><span id="MultiheadAttention-41"><a href="#MultiheadAttention-41"><span class="linenos"> 41</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span> <span class="o">=</span> <span class="n">embed_dim</span>
+</span><span id="MultiheadAttention-42"><a href="#MultiheadAttention-42"><span class="linenos"> 42</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">kdim</span> <span class="o">=</span> <span class="n">kdim</span> <span class="k">if</span> <span class="n">kdim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">embed_dim</span>
+</span><span id="MultiheadAttention-43"><a href="#MultiheadAttention-43"><span class="linenos"> 43</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">vdim</span> <span class="o">=</span> <span class="n">vdim</span> <span class="k">if</span> <span class="n">vdim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">embed_dim</span>
+</span><span id="MultiheadAttention-44"><a href="#MultiheadAttention-44"><span class="linenos"> 44</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">_qkv_same_embed_dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kdim</span> <span class="o">==</span> <span class="n">embed_dim</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdim</span> <span class="o">==</span> <span class="n">embed_dim</span>
+</span><span id="MultiheadAttention-45"><a href="#MultiheadAttention-45"><span class="linenos"> 45</span></a>
+</span><span id="MultiheadAttention-46"><a href="#MultiheadAttention-46"><span class="linenos"> 46</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span> <span class="o">=</span> <span class="n">num_heads</span>
+</span><span id="MultiheadAttention-47"><a href="#MultiheadAttention-47"><span class="linenos"> 47</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">dropout</span>
+</span><span id="MultiheadAttention-48"><a href="#MultiheadAttention-48"><span class="linenos"> 48</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">batch_first</span> <span class="o">=</span> <span class="n">batch_first</span>
+</span><span id="MultiheadAttention-49"><a href="#MultiheadAttention-49"><span class="linenos"> 49</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span> <span class="o">=</span> <span class="n">embed_dim</span> <span class="o">//</span> <span class="n">num_heads</span>
+</span><span id="MultiheadAttention-50"><a href="#MultiheadAttention-50"><span class="linenos"> 50</span></a>		<span class="k">assert</span> <span class="p">(</span>
+</span><span id="MultiheadAttention-51"><a href="#MultiheadAttention-51"><span class="linenos"> 51</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span> <span class="o">*</span> <span class="n">num_heads</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span>
+</span><span id="MultiheadAttention-52"><a href="#MultiheadAttention-52"><span class="linenos"> 52</span></a>		<span class="p">),</span> <span class="s2">&quot;embed_dim must be divisible by num_heads&quot;</span>
+</span><span id="MultiheadAttention-53"><a href="#MultiheadAttention-53"><span class="linenos"> 53</span></a>
+</span><span id="MultiheadAttention-54"><a href="#MultiheadAttention-54"><span class="linenos"> 54</span></a>		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qkv_same_embed_dim</span><span class="p">:</span>
+</span><span id="MultiheadAttention-55"><a href="#MultiheadAttention-55"><span class="linenos"> 55</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">q_proj_weight</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">),</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+</span><span id="MultiheadAttention-56"><a href="#MultiheadAttention-56"><span class="linenos"> 56</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">k_proj_weight</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">embed_dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kdim</span><span class="p">),</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+</span><span id="MultiheadAttention-57"><a href="#MultiheadAttention-57"><span class="linenos"> 57</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">v_proj_weight</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">embed_dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdim</span><span class="p">),</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+</span><span id="MultiheadAttention-58"><a href="#MultiheadAttention-58"><span class="linenos"> 58</span></a>		<span class="k">else</span><span class="p">:</span>
+</span><span id="MultiheadAttention-59"><a href="#MultiheadAttention-59"><span class="linenos"> 59</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">in_proj_weight</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span> <span class="o">*</span> <span class="n">embed_dim</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">),</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+</span><span id="MultiheadAttention-60"><a href="#MultiheadAttention-60"><span class="linenos"> 60</span></a>
+</span><span id="MultiheadAttention-61"><a href="#MultiheadAttention-61"><span class="linenos"> 61</span></a>		<span class="k">if</span> <span class="n">bias</span><span class="p">:</span>
+</span><span id="MultiheadAttention-62"><a href="#MultiheadAttention-62"><span class="linenos"> 62</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">in_proj_bias</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">embed_dim</span><span class="p">,</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+</span><span id="MultiheadAttention-63"><a href="#MultiheadAttention-63"><span class="linenos"> 63</span></a>		<span class="c1"># this may or may not work...</span>
+</span><span id="MultiheadAttention-64"><a href="#MultiheadAttention-64"><span class="linenos"> 64</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias</span><span class="p">)</span>
+</span><span id="MultiheadAttention-65"><a href="#MultiheadAttention-65"><span class="linenos"> 65</span></a>		<span class="k">if</span> <span class="ow">not</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="MultiheadAttention-66"><a href="#MultiheadAttention-66"><span class="linenos"> 66</span></a>			<span class="n">move_to_device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+</span><span id="MultiheadAttention-67"><a href="#MultiheadAttention-67"><span class="linenos"> 67</span></a>		<span class="k">if</span> <span class="ow">not</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="MultiheadAttention-68"><a href="#MultiheadAttention-68"><span class="linenos"> 68</span></a>			<span class="n">cast_to_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+</span><span id="MultiheadAttention-69"><a href="#MultiheadAttention-69"><span class="linenos"> 69</span></a>
+</span><span id="MultiheadAttention-70"><a href="#MultiheadAttention-70"><span class="linenos"> 70</span></a>		<span class="k">if</span> <span class="n">add_bias_kv</span><span class="p">:</span>
+</span><span id="MultiheadAttention-71"><a href="#MultiheadAttention-71"><span class="linenos"> 71</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">bias_k</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">),</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+</span><span id="MultiheadAttention-72"><a href="#MultiheadAttention-72"><span class="linenos"> 72</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">bias_v</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">),</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+</span><span id="MultiheadAttention-73"><a href="#MultiheadAttention-73"><span class="linenos"> 73</span></a>		<span class="k">else</span><span class="p">:</span>
+</span><span id="MultiheadAttention-74"><a href="#MultiheadAttention-74"><span class="linenos"> 74</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">bias_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias_v</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="MultiheadAttention-75"><a href="#MultiheadAttention-75"><span class="linenos"> 75</span></a>
+</span><span id="MultiheadAttention-76"><a href="#MultiheadAttention-76"><span class="linenos"> 76</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">add_zero_attn</span> <span class="o">=</span> <span class="n">add_zero_attn</span>
+</span><span id="MultiheadAttention-77"><a href="#MultiheadAttention-77"><span class="linenos"> 77</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">max_self_attn_cache_len</span> <span class="o">=</span> <span class="mi">512</span> <span class="c1"># lets just try this lol</span>
+</span><span id="MultiheadAttention-78"><a href="#MultiheadAttention-78"><span class="linenos"> 78</span></a>
+</span><span id="MultiheadAttention-79"><a href="#MultiheadAttention-79"><span class="linenos"> 79</span></a>	<span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">key_padding_mask</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="MultiheadAttention-80"><a href="#MultiheadAttention-80"><span class="linenos"> 80</span></a>			<span class="n">need_weights</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">attn_mask</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="MultiheadAttention-81"><a href="#MultiheadAttention-81"><span class="linenos"> 81</span></a>			<span class="n">average_attn_weights</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">is_causal</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+</span><span id="MultiheadAttention-82"><a href="#MultiheadAttention-82"><span class="linenos"> 82</span></a><span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="MultiheadAttention-83"><a href="#MultiheadAttention-83"><span class="linenos"> 83</span></a><span class="sd">		`need_weights` is `False` by default, since `tinygrad.Tensor.scaled_dot_product_attention` has no such option.</span>
+</span><span id="MultiheadAttention-84"><a href="#MultiheadAttention-84"><span class="linenos"> 84</span></a><span class="sd">		As such it is not yet implemented :c</span>
+</span><span id="MultiheadAttention-85"><a href="#MultiheadAttention-85"><span class="linenos"> 85</span></a><span class="sd">		&quot;&quot;&quot;</span>
+</span><span id="MultiheadAttention-86"><a href="#MultiheadAttention-86"><span class="linenos"> 86</span></a>		<span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="p">(</span><span class="ow">not</span> <span class="n">key_padding_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="n">average_attn_weights</span><span class="p">,</span> <span class="n">is_causal</span><span class="p">):</span>
+</span><span id="MultiheadAttention-87"><a href="#MultiheadAttention-87"><span class="linenos"> 87</span></a>			<span class="c1"># not going to bother with these for now</span>
+</span><span id="MultiheadAttention-88"><a href="#MultiheadAttention-88"><span class="linenos"> 88</span></a>			<span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</span><span id="MultiheadAttention-89"><a href="#MultiheadAttention-89"><span class="linenos"> 89</span></a>		<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;in_proj_weight&quot;</span><span class="p">):</span>
+</span><span id="MultiheadAttention-90"><a href="#MultiheadAttention-90"><span class="linenos"> 90</span></a>			<span class="n">wq</span><span class="p">,</span> <span class="n">wk</span><span class="p">,</span> <span class="n">wv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_proj_weight</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+</span><span id="MultiheadAttention-91"><a href="#MultiheadAttention-91"><span class="linenos"> 91</span></a>		<span class="k">else</span><span class="p">:</span>
+</span><span id="MultiheadAttention-92"><a href="#MultiheadAttention-92"><span class="linenos"> 92</span></a>			<span class="n">wq</span><span class="p">,</span> <span class="n">wk</span><span class="p">,</span> <span class="n">wv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_proj_weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_proj_weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_proj_weight</span>
+</span><span id="MultiheadAttention-93"><a href="#MultiheadAttention-93"><span class="linenos"> 93</span></a>			
+</span><span id="MultiheadAttention-94"><a href="#MultiheadAttention-94"><span class="linenos"> 94</span></a>		<span class="c1"># YAY!!!!!!</span>
+</span><span id="MultiheadAttention-95"><a href="#MultiheadAttention-95"><span class="linenos"> 95</span></a>		<span class="n">q</span> <span class="o">=</span> <span class="n">q</span> <span class="o">@</span> <span class="n">wq</span><span class="o">.</span><span class="n">T</span>
+</span><span id="MultiheadAttention-96"><a href="#MultiheadAttention-96"><span class="linenos"> 96</span></a>		<span class="n">k</span> <span class="o">=</span> <span class="n">k</span> <span class="o">@</span> <span class="n">wk</span><span class="o">.</span><span class="n">T</span>
+</span><span id="MultiheadAttention-97"><a href="#MultiheadAttention-97"><span class="linenos"> 97</span></a>		<span class="n">v</span> <span class="o">=</span> <span class="n">v</span> <span class="o">@</span> <span class="n">wv</span><span class="o">.</span><span class="n">T</span>
+</span><span id="MultiheadAttention-98"><a href="#MultiheadAttention-98"><span class="linenos"> 98</span></a>		
+</span><span id="MultiheadAttention-99"><a href="#MultiheadAttention-99"><span class="linenos"> 99</span></a>		<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;in_proj_bias&quot;</span><span class="p">):</span>
+</span><span id="MultiheadAttention-100"><a href="#MultiheadAttention-100"><span class="linenos">100</span></a>			<span class="n">q</span> <span class="o">=</span> <span class="n">q</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_proj_bias</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span><span class="p">]</span>
+</span><span id="MultiheadAttention-101"><a href="#MultiheadAttention-101"><span class="linenos">101</span></a>			<span class="n">k</span> <span class="o">=</span> <span class="n">k</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_proj_bias</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">]</span>
+</span><span id="MultiheadAttention-102"><a href="#MultiheadAttention-102"><span class="linenos">102</span></a>			<span class="n">v</span> <span class="o">=</span> <span class="n">v</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_proj_bias</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span><span class="o">*</span><span class="mi">3</span><span class="p">]</span>
+</span><span id="MultiheadAttention-103"><a href="#MultiheadAttention-103"><span class="linenos">103</span></a>		
+</span><span id="MultiheadAttention-104"><a href="#MultiheadAttention-104"><span class="linenos">104</span></a>		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias_k</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="MultiheadAttention-105"><a href="#MultiheadAttention-105"><span class="linenos">105</span></a>			<span class="n">b</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias_k</span>
+</span><span id="MultiheadAttention-106"><a href="#MultiheadAttention-106"><span class="linenos">106</span></a>			<span class="n">v</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias_v</span>
+</span><span id="MultiheadAttention-107"><a href="#MultiheadAttention-107"><span class="linenos">107</span></a>		<span class="n">qc</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+</span><span id="MultiheadAttention-108"><a href="#MultiheadAttention-108"><span class="linenos">108</span></a>		<span class="n">kc</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+</span><span id="MultiheadAttention-109"><a href="#MultiheadAttention-109"><span class="linenos">109</span></a>		<span class="n">vc</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+</span><span id="MultiheadAttention-110"><a href="#MultiheadAttention-110"><span class="linenos">110</span></a>		
+</span><span id="MultiheadAttention-111"><a href="#MultiheadAttention-111"><span class="linenos">111</span></a>		<span class="k">assert</span> <span class="n">qc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">vc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">kc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span>
+</span><span id="MultiheadAttention-112"><a href="#MultiheadAttention-112"><span class="linenos">112</span></a>		
+</span><span id="MultiheadAttention-113"><a href="#MultiheadAttention-113"><span class="linenos">113</span></a>		<span class="n">att</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="MultiheadAttention-114"><a href="#MultiheadAttention-114"><span class="linenos">114</span></a>		<span class="n">weights</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="MultiheadAttention-115"><a href="#MultiheadAttention-115"><span class="linenos">115</span></a>		<span class="k">for</span> <span class="n">head</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span><span class="p">):</span>
+</span><span id="MultiheadAttention-116"><a href="#MultiheadAttention-116"><span class="linenos">116</span></a>			<span class="n">qi</span><span class="p">,</span> <span class="n">ki</span><span class="p">,</span> <span class="n">vi</span> <span class="o">=</span> <span class="n">qc</span><span class="p">[</span><span class="n">head</span><span class="p">],</span> <span class="n">kc</span><span class="p">[</span><span class="n">head</span><span class="p">],</span> <span class="n">vc</span><span class="p">[</span><span class="n">head</span><span class="p">]</span>
+</span><span id="MultiheadAttention-117"><a href="#MultiheadAttention-117"><span class="linenos">117</span></a>			<span class="n">hi</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">scaled_dot_product_attention</span><span class="p">(</span><span class="n">qi</span><span class="p">,</span> <span class="n">ki</span><span class="p">,</span> <span class="n">vi</span><span class="p">,</span> <span class="n">attn_mask</span> <span class="o">=</span> <span class="n">attn_mask</span><span class="p">)</span>
+</span><span id="MultiheadAttention-118"><a href="#MultiheadAttention-118"><span class="linenos">118</span></a>			<span class="k">if</span> <span class="n">need_weights</span><span class="p">:</span>
+</span><span id="MultiheadAttention-119"><a href="#MultiheadAttention-119"><span class="linenos">119</span></a>				<span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</span><span id="MultiheadAttention-120"><a href="#MultiheadAttention-120"><span class="linenos">120</span></a>			<span class="n">att</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hi</span><span class="p">)</span>
+</span><span id="MultiheadAttention-121"><a href="#MultiheadAttention-121"><span class="linenos">121</span></a>		<span class="n">weight</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="o">*</span><span class="n">att</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+</span><span id="MultiheadAttention-122"><a href="#MultiheadAttention-122"><span class="linenos">122</span></a>		<span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
+</span><span id="MultiheadAttention-123"><a href="#MultiheadAttention-123"><span class="linenos">123</span></a>		<span class="k">if</span> <span class="n">need_weights</span><span class="p">:</span>
+</span><span id="MultiheadAttention-124"><a href="#MultiheadAttention-124"><span class="linenos">124</span></a>			<span class="c1"># For now, weight just miight be inaccurate :c</span>
+</span><span id="MultiheadAttention-125"><a href="#MultiheadAttention-125"><span class="linenos">125</span></a>			<span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">weight</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">:</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+</span><span id="MultiheadAttention-126"><a href="#MultiheadAttention-126"><span class="linenos">126</span></a>		<span class="k">return</span> <span class="p">(</span><span class="n">out</span><span class="p">,)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Near-exact reimplementation of <a href="https://docs.pytorch.org/docs/stable/generated/torch.nn.MultiheadAttention.html">torch.nn.MultiheadAttention</a></p>
+</div>
+
+
+                            <div id="MultiheadAttention.__init__" class="classattr">
+                                        <input id="MultiheadAttention.__init__-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="name">MultiheadAttention</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">embed_dim</span>,</span><span class="param">	<span class="n">num_heads</span>,</span><span class="param">	<span class="n">dropout</span><span class="o">=</span><span class="mf">0.0</span>,</span><span class="param">	<span class="n">bias</span><span class="o">=</span><span class="kc">True</span>,</span><span class="param">	<span class="n">add_bias_kv</span><span class="o">=</span><span class="kc">False</span>,</span><span class="param">	<span class="n">add_zero_attn</span><span class="o">=</span><span class="kc">False</span>,</span><span class="param">	<span class="n">kdim</span><span class="o">=</span><span class="kc">None</span>,</span><span class="param">	<span class="n">vdim</span><span class="o">=</span><span class="kc">None</span>,</span><span class="param">	<span class="n">batch_first</span><span class="o">=</span><span class="kc">False</span>,</span><span class="param">	<span class="n">device</span><span class="o">=</span><span class="kc">None</span>,</span><span class="param">	<span class="n">dtype</span><span class="o">=</span><span class="kc">None</span></span>)</span>
+
+                <label class="view-source-button" for="MultiheadAttention.__init__-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#MultiheadAttention.__init__"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="MultiheadAttention.__init__-11"><a href="#MultiheadAttention.__init__-11"><span class="linenos">11</span></a>	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">,</span>
+</span><span id="MultiheadAttention.__init__-12"><a href="#MultiheadAttention.__init__-12"><span class="linenos">12</span></a>				<span class="n">num_heads</span><span class="p">,</span>
+</span><span id="MultiheadAttention.__init__-13"><a href="#MultiheadAttention.__init__-13"><span class="linenos">13</span></a>				<span class="n">dropout</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span><span id="MultiheadAttention.__init__-14"><a href="#MultiheadAttention.__init__-14"><span class="linenos">14</span></a>				<span class="n">bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="MultiheadAttention.__init__-15"><a href="#MultiheadAttention.__init__-15"><span class="linenos">15</span></a>				<span class="n">add_bias_kv</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="MultiheadAttention.__init__-16"><a href="#MultiheadAttention.__init__-16"><span class="linenos">16</span></a>				<span class="n">add_zero_attn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="MultiheadAttention.__init__-17"><a href="#MultiheadAttention.__init__-17"><span class="linenos">17</span></a>				<span class="n">kdim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vdim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="MultiheadAttention.__init__-18"><a href="#MultiheadAttention.__init__-18"><span class="linenos">18</span></a>				<span class="n">batch_first</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="MultiheadAttention.__init__-19"><a href="#MultiheadAttention.__init__-19"><span class="linenos">19</span></a>				<span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="MultiheadAttention.__init__-20"><a href="#MultiheadAttention.__init__-20"><span class="linenos">20</span></a>				<span class="n">dtype</span><span class="o">=</span><span class="kc">None</span>
+</span><span id="MultiheadAttention.__init__-21"><a href="#MultiheadAttention.__init__-21"><span class="linenos">21</span></a>			<span class="p">):</span>
+</span><span id="MultiheadAttention.__init__-22"><a href="#MultiheadAttention.__init__-22"><span class="linenos">22</span></a><span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="MultiheadAttention.__init__-23"><a href="#MultiheadAttention.__init__-23"><span class="linenos">23</span></a><span class="sd">		:param embed_dim: Total dimension of the model.</span>
+</span><span id="MultiheadAttention.__init__-24"><a href="#MultiheadAttention.__init__-24"><span class="linenos">24</span></a><span class="sd">		:param num_heads:</span>
+</span><span id="MultiheadAttention.__init__-25"><a href="#MultiheadAttention.__init__-25"><span class="linenos">25</span></a><span class="sd">		:param dropout:</span>
+</span><span id="MultiheadAttention.__init__-26"><a href="#MultiheadAttention.__init__-26"><span class="linenos">26</span></a><span class="sd">		:param bias:</span>
+</span><span id="MultiheadAttention.__init__-27"><a href="#MultiheadAttention.__init__-27"><span class="linenos">27</span></a><span class="sd">		:param add_bias_kv:</span>
+</span><span id="MultiheadAttention.__init__-28"><a href="#MultiheadAttention.__init__-28"><span class="linenos">28</span></a><span class="sd">		:param add_zero_attn:</span>
+</span><span id="MultiheadAttention.__init__-29"><a href="#MultiheadAttention.__init__-29"><span class="linenos">29</span></a><span class="sd">		:param kdim:</span>
+</span><span id="MultiheadAttention.__init__-30"><a href="#MultiheadAttention.__init__-30"><span class="linenos">30</span></a><span class="sd">		:param vdim:</span>
+</span><span id="MultiheadAttention.__init__-31"><a href="#MultiheadAttention.__init__-31"><span class="linenos">31</span></a><span class="sd">		:param batch_first:</span>
+</span><span id="MultiheadAttention.__init__-32"><a href="#MultiheadAttention.__init__-32"><span class="linenos">32</span></a><span class="sd">		:param device:</span>
+</span><span id="MultiheadAttention.__init__-33"><a href="#MultiheadAttention.__init__-33"><span class="linenos">33</span></a><span class="sd">		:param dtype:</span>
+</span><span id="MultiheadAttention.__init__-34"><a href="#MultiheadAttention.__init__-34"><span class="linenos">34</span></a><span class="sd">		&quot;&quot;&quot;</span>
+</span><span id="MultiheadAttention.__init__-35"><a href="#MultiheadAttention.__init__-35"><span class="linenos">35</span></a>		<span class="k">if</span> <span class="n">embed_dim</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">num_heads</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="MultiheadAttention.__init__-36"><a href="#MultiheadAttention.__init__-36"><span class="linenos">36</span></a>			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="MultiheadAttention.__init__-37"><a href="#MultiheadAttention.__init__-37"><span class="linenos">37</span></a>				<span class="sa">f</span><span class="s2">&quot;embed_dim and num_heads must be greater than 0,&quot;</span>
+</span><span id="MultiheadAttention.__init__-38"><a href="#MultiheadAttention.__init__-38"><span class="linenos">38</span></a>				<span class="sa">f</span><span class="s2">&quot; got embed_dim=</span><span class="si">{</span><span class="n">embed_dim</span><span class="si">}</span><span class="s2"> and num_heads=</span><span class="si">{</span><span class="n">num_heads</span><span class="si">}</span><span class="s2"> instead&quot;</span>
+</span><span id="MultiheadAttention.__init__-39"><a href="#MultiheadAttention.__init__-39"><span class="linenos">39</span></a>			<span class="p">)</span>
+</span><span id="MultiheadAttention.__init__-40"><a href="#MultiheadAttention.__init__-40"><span class="linenos">40</span></a>		<span class="n">factory_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;device&quot;</span><span class="p">:</span> <span class="n">device</span><span class="p">,</span> <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="n">dtype</span><span class="p">}</span>
+</span><span id="MultiheadAttention.__init__-41"><a href="#MultiheadAttention.__init__-41"><span class="linenos">41</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span> <span class="o">=</span> <span class="n">embed_dim</span>
+</span><span id="MultiheadAttention.__init__-42"><a href="#MultiheadAttention.__init__-42"><span class="linenos">42</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">kdim</span> <span class="o">=</span> <span class="n">kdim</span> <span class="k">if</span> <span class="n">kdim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">embed_dim</span>
+</span><span id="MultiheadAttention.__init__-43"><a href="#MultiheadAttention.__init__-43"><span class="linenos">43</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">vdim</span> <span class="o">=</span> <span class="n">vdim</span> <span class="k">if</span> <span class="n">vdim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">embed_dim</span>
+</span><span id="MultiheadAttention.__init__-44"><a href="#MultiheadAttention.__init__-44"><span class="linenos">44</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">_qkv_same_embed_dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kdim</span> <span class="o">==</span> <span class="n">embed_dim</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdim</span> <span class="o">==</span> <span class="n">embed_dim</span>
+</span><span id="MultiheadAttention.__init__-45"><a href="#MultiheadAttention.__init__-45"><span class="linenos">45</span></a>
+</span><span id="MultiheadAttention.__init__-46"><a href="#MultiheadAttention.__init__-46"><span class="linenos">46</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span> <span class="o">=</span> <span class="n">num_heads</span>
+</span><span id="MultiheadAttention.__init__-47"><a href="#MultiheadAttention.__init__-47"><span class="linenos">47</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">dropout</span>
+</span><span id="MultiheadAttention.__init__-48"><a href="#MultiheadAttention.__init__-48"><span class="linenos">48</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">batch_first</span> <span class="o">=</span> <span class="n">batch_first</span>
+</span><span id="MultiheadAttention.__init__-49"><a href="#MultiheadAttention.__init__-49"><span class="linenos">49</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span> <span class="o">=</span> <span class="n">embed_dim</span> <span class="o">//</span> <span class="n">num_heads</span>
+</span><span id="MultiheadAttention.__init__-50"><a href="#MultiheadAttention.__init__-50"><span class="linenos">50</span></a>		<span class="k">assert</span> <span class="p">(</span>
+</span><span id="MultiheadAttention.__init__-51"><a href="#MultiheadAttention.__init__-51"><span class="linenos">51</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span> <span class="o">*</span> <span class="n">num_heads</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span>
+</span><span id="MultiheadAttention.__init__-52"><a href="#MultiheadAttention.__init__-52"><span class="linenos">52</span></a>		<span class="p">),</span> <span class="s2">&quot;embed_dim must be divisible by num_heads&quot;</span>
+</span><span id="MultiheadAttention.__init__-53"><a href="#MultiheadAttention.__init__-53"><span class="linenos">53</span></a>
+</span><span id="MultiheadAttention.__init__-54"><a href="#MultiheadAttention.__init__-54"><span class="linenos">54</span></a>		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qkv_same_embed_dim</span><span class="p">:</span>
+</span><span id="MultiheadAttention.__init__-55"><a href="#MultiheadAttention.__init__-55"><span class="linenos">55</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">q_proj_weight</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">),</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+</span><span id="MultiheadAttention.__init__-56"><a href="#MultiheadAttention.__init__-56"><span class="linenos">56</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">k_proj_weight</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">embed_dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kdim</span><span class="p">),</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+</span><span id="MultiheadAttention.__init__-57"><a href="#MultiheadAttention.__init__-57"><span class="linenos">57</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">v_proj_weight</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">embed_dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdim</span><span class="p">),</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+</span><span id="MultiheadAttention.__init__-58"><a href="#MultiheadAttention.__init__-58"><span class="linenos">58</span></a>		<span class="k">else</span><span class="p">:</span>
+</span><span id="MultiheadAttention.__init__-59"><a href="#MultiheadAttention.__init__-59"><span class="linenos">59</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">in_proj_weight</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span> <span class="o">*</span> <span class="n">embed_dim</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">),</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+</span><span id="MultiheadAttention.__init__-60"><a href="#MultiheadAttention.__init__-60"><span class="linenos">60</span></a>
+</span><span id="MultiheadAttention.__init__-61"><a href="#MultiheadAttention.__init__-61"><span class="linenos">61</span></a>		<span class="k">if</span> <span class="n">bias</span><span class="p">:</span>
+</span><span id="MultiheadAttention.__init__-62"><a href="#MultiheadAttention.__init__-62"><span class="linenos">62</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">in_proj_bias</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">embed_dim</span><span class="p">,</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+</span><span id="MultiheadAttention.__init__-63"><a href="#MultiheadAttention.__init__-63"><span class="linenos">63</span></a>		<span class="c1"># this may or may not work...</span>
+</span><span id="MultiheadAttention.__init__-64"><a href="#MultiheadAttention.__init__-64"><span class="linenos">64</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias</span><span class="p">)</span>
+</span><span id="MultiheadAttention.__init__-65"><a href="#MultiheadAttention.__init__-65"><span class="linenos">65</span></a>		<span class="k">if</span> <span class="ow">not</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="MultiheadAttention.__init__-66"><a href="#MultiheadAttention.__init__-66"><span class="linenos">66</span></a>			<span class="n">move_to_device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+</span><span id="MultiheadAttention.__init__-67"><a href="#MultiheadAttention.__init__-67"><span class="linenos">67</span></a>		<span class="k">if</span> <span class="ow">not</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="MultiheadAttention.__init__-68"><a href="#MultiheadAttention.__init__-68"><span class="linenos">68</span></a>			<span class="n">cast_to_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+</span><span id="MultiheadAttention.__init__-69"><a href="#MultiheadAttention.__init__-69"><span class="linenos">69</span></a>
+</span><span id="MultiheadAttention.__init__-70"><a href="#MultiheadAttention.__init__-70"><span class="linenos">70</span></a>		<span class="k">if</span> <span class="n">add_bias_kv</span><span class="p">:</span>
+</span><span id="MultiheadAttention.__init__-71"><a href="#MultiheadAttention.__init__-71"><span class="linenos">71</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">bias_k</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">),</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+</span><span id="MultiheadAttention.__init__-72"><a href="#MultiheadAttention.__init__-72"><span class="linenos">72</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">bias_v</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">),</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+</span><span id="MultiheadAttention.__init__-73"><a href="#MultiheadAttention.__init__-73"><span class="linenos">73</span></a>		<span class="k">else</span><span class="p">:</span>
+</span><span id="MultiheadAttention.__init__-74"><a href="#MultiheadAttention.__init__-74"><span class="linenos">74</span></a>			<span class="bp">self</span><span class="o">.</span><span class="n">bias_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias_v</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="MultiheadAttention.__init__-75"><a href="#MultiheadAttention.__init__-75"><span class="linenos">75</span></a>
+</span><span id="MultiheadAttention.__init__-76"><a href="#MultiheadAttention.__init__-76"><span class="linenos">76</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">add_zero_attn</span> <span class="o">=</span> <span class="n">add_zero_attn</span>
+</span><span id="MultiheadAttention.__init__-77"><a href="#MultiheadAttention.__init__-77"><span class="linenos">77</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">max_self_attn_cache_len</span> <span class="o">=</span> <span class="mi">512</span> <span class="c1"># lets just try this lol</span>
+</span></pre></div>
+
+
+            <div class="docstring"><h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>embed_dim</strong>:  Total dimension of the model.</li>
+<li><strong>num_heads</strong>: </li>
+<li><strong>dropout</strong>: </li>
+<li><strong>bias</strong>: </li>
+<li><strong>add_bias_kv</strong>: </li>
+<li><strong>add_zero_attn</strong>: </li>
+<li><strong>kdim</strong>: </li>
+<li><strong>vdim</strong>: </li>
+<li><strong>batch_first</strong>: </li>
+<li><strong>device</strong>: </li>
+<li><strong>dtype</strong>: </li>
+</ul>
+</div>
+
+
+                            </div>
+                            <div id="MultiheadAttention.embed_dim" class="classattr">
+                                <div class="attr variable">
+            <span class="name">embed_dim</span>
+
+        
+    </div>
+    <a class="headerlink" href="#MultiheadAttention.embed_dim"></a>
+    
+    
+
+                            </div>
+                            <div id="MultiheadAttention.kdim" class="classattr">
+                                <div class="attr variable">
+            <span class="name">kdim</span>
+
+        
+    </div>
+    <a class="headerlink" href="#MultiheadAttention.kdim"></a>
+    
+    
+
+                            </div>
+                            <div id="MultiheadAttention.vdim" class="classattr">
+                                <div class="attr variable">
+            <span class="name">vdim</span>
+
+        
+    </div>
+    <a class="headerlink" href="#MultiheadAttention.vdim"></a>
+    
+    
+
+                            </div>
+                            <div id="MultiheadAttention.num_heads" class="classattr">
+                                <div class="attr variable">
+            <span class="name">num_heads</span>
+
+        
+    </div>
+    <a class="headerlink" href="#MultiheadAttention.num_heads"></a>
+    
+    
+
+                            </div>
+                            <div id="MultiheadAttention.dropout" class="classattr">
+                                <div class="attr variable">
+            <span class="name">dropout</span>
+
+        
+    </div>
+    <a class="headerlink" href="#MultiheadAttention.dropout"></a>
+    
+    
+
+                            </div>
+                            <div id="MultiheadAttention.batch_first" class="classattr">
+                                <div class="attr variable">
+            <span class="name">batch_first</span>
+
+        
+    </div>
+    <a class="headerlink" href="#MultiheadAttention.batch_first"></a>
+    
+    
+
+                            </div>
+                            <div id="MultiheadAttention.head_dim" class="classattr">
+                                <div class="attr variable">
+            <span class="name">head_dim</span>
+
+        
+    </div>
+    <a class="headerlink" href="#MultiheadAttention.head_dim"></a>
+    
+    
+
+                            </div>
+                            <div id="MultiheadAttention.out_proj" class="classattr">
+                                <div class="attr variable">
+            <span class="name">out_proj</span>
+
+        
+    </div>
+    <a class="headerlink" href="#MultiheadAttention.out_proj"></a>
+    
+    
+
+                            </div>
+                            <div id="MultiheadAttention.add_zero_attn" class="classattr">
+                                <div class="attr variable">
+            <span class="name">add_zero_attn</span>
+
+        
+    </div>
+    <a class="headerlink" href="#MultiheadAttention.add_zero_attn"></a>
+    
+    
+
+                            </div>
+                            <div id="MultiheadAttention.max_self_attn_cache_len" class="classattr">
+                                <div class="attr variable">
+            <span class="name">max_self_attn_cache_len</span>
+
+        
+    </div>
+    <a class="headerlink" href="#MultiheadAttention.max_self_attn_cache_len"></a>
+    
+    
+
+                            </div>
+                </section>
+                <section id="Embedding">
+                            <input id="Embedding-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr class">
+            
+    <span class="def">class</span>
+    <span class="name">Embedding</span>:
+
+                <label class="view-source-button" for="Embedding-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#Embedding"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Embedding-129"><a href="#Embedding-129"><span class="linenos">129</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Embedding</span><span class="p">:</span>
+</span><span id="Embedding-130"><a href="#Embedding-130"><span class="linenos">130</span></a><span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Embedding-131"><a href="#Embedding-131"><span class="linenos">131</span></a><span class="sd">	Functions identically to tinygrad.nn.Embedding, but some calculation is offloaded to the CPU if</span>
+</span><span id="Embedding-132"><a href="#Embedding-132"><span class="linenos">132</span></a><span class="sd">	the given device does not support tensors of very large size.</span>
+</span><span id="Embedding-133"><a href="#Embedding-133"><span class="linenos">133</span></a><span class="sd">	&quot;&quot;&quot;</span>
+</span><span id="Embedding-134"><a href="#Embedding-134"><span class="linenos">134</span></a>	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+</span><span id="Embedding-135"><a href="#Embedding-135"><span class="linenos">135</span></a>			<span class="n">vocab_size</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+</span><span id="Embedding-136"><a href="#Embedding-136"><span class="linenos">136</span></a>			<span class="n">embed_size</span><span class="p">:</span><span class="nb">int</span>
+</span><span id="Embedding-137"><a href="#Embedding-137"><span class="linenos">137</span></a>			<span class="p">):</span>
+</span><span id="Embedding-138"><a href="#Embedding-138"><span class="linenos">138</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">vocab_sz</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">embed_sz</span> <span class="o">=</span> <span class="n">vocab_size</span><span class="p">,</span> <span class="n">embed_size</span>
+</span><span id="Embedding-139"><a href="#Embedding-139"><span class="linenos">139</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">vocab_size</span><span class="p">,</span> <span class="n">embed_size</span><span class="p">)</span>
+</span><span id="Embedding-140"><a href="#Embedding-140"><span class="linenos">140</span></a>		<span class="n">xavier_uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="p">)</span>
+</span><span id="Embedding-141"><a href="#Embedding-141"><span class="linenos">141</span></a>	
+</span><span id="Embedding-142"><a href="#Embedding-142"><span class="linenos">142</span></a>	<span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+</span><span id="Embedding-143"><a href="#Embedding-143"><span class="linenos">143</span></a>		<span class="n">vocab_sz</span><span class="p">,</span> <span class="n">embed_sz</span><span class="p">,</span> <span class="n">weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocab_sz</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">embed_sz</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span>
+</span><span id="Embedding-144"><a href="#Embedding-144"><span class="linenos">144</span></a>		
+</span><span id="Embedding-145"><a href="#Embedding-145"><span class="linenos">145</span></a>		<span class="n">original_device</span> <span class="o">=</span> <span class="n">idx</span><span class="o">.</span><span class="n">device</span>
+</span><span id="Embedding-146"><a href="#Embedding-146"><span class="linenos">146</span></a>		<span class="n">working_device</span> <span class="o">=</span> <span class="n">idx</span><span class="o">.</span><span class="n">device</span>
+</span><span id="Embedding-147"><a href="#Embedding-147"><span class="linenos">147</span></a>		
+</span><span id="Embedding-148"><a href="#Embedding-148"><span class="linenos">148</span></a>		<span class="k">if</span> <span class="ow">not</span> <span class="n">device_supports_longlong</span><span class="p">(</span><span class="n">weight</span><span class="o">.</span><span class="n">device</span><span class="p">):</span>
+</span><span id="Embedding-149"><a href="#Embedding-149"><span class="linenos">149</span></a>			<span class="c1"># perform embedding on the CPU as a fallback</span>
+</span><span id="Embedding-150"><a href="#Embedding-150"><span class="linenos">150</span></a>			<span class="n">working_device</span> <span class="o">=</span> <span class="s2">&quot;CPU&quot;</span>
+</span><span id="Embedding-151"><a href="#Embedding-151"><span class="linenos">151</span></a>		
+</span><span id="Embedding-152"><a href="#Embedding-152"><span class="linenos">152</span></a>		<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;arange&#39;</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">arange</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">vocab_sz</span><span class="p">,</span>
+</span><span id="Embedding-153"><a href="#Embedding-153"><span class="linenos">153</span></a>			<span class="n">requires_grad</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">working_device</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">highest_precision_int</span><span class="p">(</span><span class="n">working_device</span><span class="p">)</span> <span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="Embedding-154"><a href="#Embedding-154"><span class="linenos">154</span></a>		<span class="n">big_shp</span> <span class="o">=</span> <span class="n">idx</span><span class="o">.</span><span class="n">shape</span><span class="o">+</span><span class="p">(</span><span class="n">vocab_sz</span><span class="p">,</span> <span class="n">embed_sz</span><span class="p">)</span>
+</span><span id="Embedding-155"><a href="#Embedding-155"><span class="linenos">155</span></a>		
+</span><span id="Embedding-156"><a href="#Embedding-156"><span class="linenos">156</span></a>		
+</span><span id="Embedding-157"><a href="#Embedding-157"><span class="linenos">157</span></a>		<span class="n">idx</span> <span class="o">=</span> <span class="n">idx</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">working_device</span><span class="p">)</span>
+</span><span id="Embedding-158"><a href="#Embedding-158"><span class="linenos">158</span></a>		<span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">working_device</span><span class="p">)</span>
+</span><span id="Embedding-159"><a href="#Embedding-159"><span class="linenos">159</span></a>		
+</span><span id="Embedding-160"><a href="#Embedding-160"><span class="linenos">160</span></a>		<span class="n">arange</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">vals</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">arange</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">big_shp</span><span class="p">),</span> <span class="n">idx</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">idx</span><span class="o">.</span><span class="n">shape</span><span class="o">+</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">big_shp</span><span class="p">),</span> <span class="n">weight</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">big_shp</span><span class="p">)</span>
+</span><span id="Embedding-161"><a href="#Embedding-161"><span class="linenos">161</span></a>		
+</span><span id="Embedding-162"><a href="#Embedding-162"><span class="linenos">162</span></a>		<span class="c1"># (-1, 77, 49408, -1)</span>
+</span><span id="Embedding-163"><a href="#Embedding-163"><span class="linenos">163</span></a>		<span class="n">inter</span> <span class="o">=</span> <span class="p">(</span><span class="n">arange</span> <span class="o">==</span> <span class="n">idx</span><span class="p">)</span>
+</span><span id="Embedding-164"><a href="#Embedding-164"><span class="linenos">164</span></a>		
+</span><span id="Embedding-165"><a href="#Embedding-165"><span class="linenos">165</span></a>		<span class="c1"># (-1, 77, 49408, -1)</span>
+</span><span id="Embedding-166"><a href="#Embedding-166"><span class="linenos">166</span></a>		<span class="n">inter2</span> <span class="o">=</span> <span class="n">inter</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
+</span><span id="Embedding-167"><a href="#Embedding-167"><span class="linenos">167</span></a>		<span class="n">out</span> <span class="o">=</span> <span class="n">inter2</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+</span><span id="Embedding-168"><a href="#Embedding-168"><span class="linenos">168</span></a>		
+</span><span id="Embedding-169"><a href="#Embedding-169"><span class="linenos">169</span></a>		<span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">original_device</span><span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Functions identically to tinygrad.nn.Embedding, but some calculation is offloaded to the CPU if
+the given device does not support tensors of very large size.</p>
+</div>
+
+
+                            <div id="Embedding.__init__" class="classattr">
+                                        <input id="Embedding.__init__-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="name">Embedding</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">vocab_size</span><span class="p">:</span> <span class="nb">int</span>, </span><span class="param"><span class="n">embed_size</span><span class="p">:</span> <span class="nb">int</span></span>)</span>
+
+                <label class="view-source-button" for="Embedding.__init__-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#Embedding.__init__"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Embedding.__init__-134"><a href="#Embedding.__init__-134"><span class="linenos">134</span></a>	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+</span><span id="Embedding.__init__-135"><a href="#Embedding.__init__-135"><span class="linenos">135</span></a>			<span class="n">vocab_size</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+</span><span id="Embedding.__init__-136"><a href="#Embedding.__init__-136"><span class="linenos">136</span></a>			<span class="n">embed_size</span><span class="p">:</span><span class="nb">int</span>
+</span><span id="Embedding.__init__-137"><a href="#Embedding.__init__-137"><span class="linenos">137</span></a>			<span class="p">):</span>
+</span><span id="Embedding.__init__-138"><a href="#Embedding.__init__-138"><span class="linenos">138</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">vocab_sz</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">embed_sz</span> <span class="o">=</span> <span class="n">vocab_size</span><span class="p">,</span> <span class="n">embed_size</span>
+</span><span id="Embedding.__init__-139"><a href="#Embedding.__init__-139"><span class="linenos">139</span></a>		<span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="n">tinygrad</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">vocab_size</span><span class="p">,</span> <span class="n">embed_size</span><span class="p">)</span>
+</span><span id="Embedding.__init__-140"><a href="#Embedding.__init__-140"><span class="linenos">140</span></a>		<span class="n">xavier_uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="p">)</span>
+</span></pre></div>
+
+
+    
+
+                            </div>
+                            <div id="Embedding.weight" class="classattr">
+                                <div class="attr variable">
+            <span class="name">weight</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Embedding.weight"></a>
+    
+    
+
+                            </div>
+                </section>
     </main>
 <script>
     function escapeHTML(html) {

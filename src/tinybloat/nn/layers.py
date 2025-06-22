@@ -4,8 +4,10 @@ from .init import xavier_uniform_
 from ..compatibility import device_supports_longlong
 
 class MultiheadAttention:
-	def __init__(self,
-				embed_dim,
+	"""
+	Near-exact reimplementation of [torch.nn.MultiheadAttention](https://docs.pytorch.org/docs/stable/generated/torch.nn.MultiheadAttention.html)
+	"""
+	def __init__(self, embed_dim,
 				num_heads,
 				dropout=0.0,
 				bias=True,
@@ -17,7 +19,17 @@ class MultiheadAttention:
 				dtype=None
 			):
 		"""
-		Near-exact reimplementation of [torch.nn.MultiheadAttention](https://docs.pytorch.org/docs/stable/generated/torch.nn.MultiheadAttention.html)
+		:param embed_dim: Total dimension of the model.
+		:param num_heads:
+		:param dropout:
+		:param bias:
+		:param add_bias_kv:
+		:param add_zero_attn:
+		:param kdim:
+		:param vdim:
+		:param batch_first:
+		:param device:
+		:param dtype:
 		"""
 		if embed_dim <= 0 or num_heads <= 0:
 			raise ValueError(
@@ -96,7 +108,6 @@ class MultiheadAttention:
 		vc = v.chunk(self.num_heads, dim = 1)
 		
 		assert qc[0].shape[1] == vc[0].shape[1] == kc[0].shape[1] == self.head_dim
-		#input(self.out_proj.weight.shape)
 		
 		att = []
 		weights = []
@@ -104,12 +115,10 @@ class MultiheadAttention:
 			qi, ki, vi = qc[head], kc[head], vc[head]
 			hi = tinygrad.Tensor.scaled_dot_product_attention(qi, ki, vi, attn_mask = attn_mask)
 			if need_weights:
-				#weights.append()
-				pass
+				raise NotImplementedError
 			att.append(hi)
 		weight = tinygrad.Tensor.cat(*att, dim = 1)
 		out = self.out_proj(weight)
-		#input(out.shape)
 		if need_weights:
 			# For now, weight just miight be inaccurate :c
 			return out, weight[0:out.shape[0], 0:out.shape[0]]
@@ -117,7 +126,14 @@ class MultiheadAttention:
 
 
 class Embedding:
-	def __init__(self, vocab_size:int, embed_size:int):
+	"""
+	Functions identically to tinygrad.nn.Embedding, but some calculation is offloaded to the CPU if
+	the given device does not support tensors of very large size.
+	"""
+	def __init__(self,
+			vocab_size:int,
+			embed_size:int
+			):
 		self.vocab_sz, self.embed_sz = vocab_size, embed_size
 		self.weight = tinygrad.Tensor.zeros(vocab_size, embed_size)
 		xavier_uniform_(self.weight )
@@ -128,7 +144,7 @@ class Embedding:
 		original_device = idx.device
 		working_device = idx.device
 		
-		if not tg_device_supports_longlong(weight.device):
+		if not device_supports_longlong(weight.device):
 			# perform embedding on the CPU as a fallback
 			working_device = "CPU"
 		
