@@ -18,6 +18,7 @@ These are functionality that should be reimplemented in the future:
 ### High priority:
 - Function for reliably determining the supported data types of a given hardware device
 - Conversion of fp8e4m3 and fp8e5m2 tensors to float32 even if no available devices support either fp8 data type
+- Finish implementing ComplexTensor operators such that it reaches feature parity with tinygrad.Tensor
 ### Lower priority:
 - [All the loss functions from pytorch](https://docs.pytorch.org/docs/stable/nn.html#loss-functions)
 - [torch.nn.CosineSimilarity](https://docs.pytorch.org/docs/stable/generated/torch.nn.CosineSimilarity.html#torch.nn.CosineSimilarity)
