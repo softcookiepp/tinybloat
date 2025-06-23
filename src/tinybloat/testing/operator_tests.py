@@ -269,3 +269,21 @@ def test_limit_uint_precision():
 	tinybloat.limit_uint_precision(dummy, tinygrad.dtypes.uint16, tinygrad.dtypes.uint32)
 	assert dummy.too_high.dtype == tinygrad.dtypes.uint32
 	assert dummy.too_low.dtype == tinygrad.dtypes.uint16
+	
+def test_convert_fp8_safely():
+	test_b_array = bytearray("123145356234", "utf-8")
+	test_b = b"123145356234"
+	
+	# first do it with e4m3
+	ttorch = torch.frombuffer(test_b_array, dtype = torch.float8_e4m3fn)
+	ttiny = tinygrad.Tensor(test_b, dtype = tinygrad.dtypes.fp8e4m3)
+	ttorch = ttorch.to(torch.float32)
+	ttiny = tinybloat.safety_functions.cast(ttiny, tinygrad.dtypes.float32)
+	assert mse(ttorch.numpy(), ttiny.numpy() ) == 0.0
+	
+	# then with e5m2
+	ttorch = torch.frombuffer(test_b_array, dtype = torch.float8_e5m2)
+	ttiny = tinygrad.Tensor(test_b, dtype = tinygrad.dtypes.fp8e5m2)
+	ttorch = ttorch.to(torch.float32)
+	ttiny = tinybloat.safety_functions.cast(ttiny, tinygrad.dtypes.float32)
+	assert mse(ttorch.numpy(), ttiny.numpy() ) == 0.0

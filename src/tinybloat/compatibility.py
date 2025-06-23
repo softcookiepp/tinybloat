@@ -1,5 +1,6 @@
 import tinygrad
 from .internal import get_tensor_memoryview
+import numpy as np
 
 _longlong_support_status = {}
 
@@ -55,10 +56,15 @@ def convert_fp8(fp8_tensor, dtype):
 		
 		# start with the default
 		value = ( (1 + mantissa / 8.0) * (2 ** (exponent - bias)) ).astype(np.float32)
-		
-		value[exponent == 0] = (mantissa / 8.0) * (2 ** (1 - bias))
-		value[(exponent == 0xF and mantissa == 0)] = np.inf
-		value[(exponent == 0xF and mantissa != 0)] = np.nan
+		exponent_nonzero_idx = np.nonzero((exponent == 0)*np.arange(len(value) ) )[0].astype(int)
+		if exponent_nonzero_idx.size > 0:
+			value[exponent_nonzero_idx] = (mantissa / 8.0) * (2 ** (1 - bias))
+		inf_idx = np.nonzero( ( (exponent == 0xF) * (mantissa == 0) )*np.arange(len(value) ) )[0].astype(int)
+		if inf_idx.size > 0:
+			value[ind_idx] = np.inf
+		nan_idx = np.nonzero( ( (exponent == 0xF) * (mantissa != 0) )*np.arange(len(value) ) )[0].astype(int)
+		if nan_idx.size > 0:
+			value[nan_idx] = np.nan
 		value = value*(sign.astype(np.float32)*(-2) + 1)
 	elif fp8_tensor.dtype == tinygrad.dtypes.fp8e5m2:
 		sign = ((fp8_np >> 7) & 0x1).astype(np.float32)
@@ -69,9 +75,15 @@ def convert_fp8(fp8_tensor, dtype):
 		# start with the default
 		value = ( (1 + mantissa / 4.0) * (2 ** (exponent - bias)) ).astype(np.float32)
 		
-		value[exponent == 0] = (mantissa / 4.0) * (2 ** (1 - bias))
-		value[(exponent == 0x1F and mantissa == 0)] = np.inf
-		value[(exponent == 0x1F and mantissa != 0)] = np.nan
+		exponent_nonzero_idx = np.nonzero((exponent == 0)*np.arange(len(value) ) )[0].astype(int)
+		if exponent_nonzero_idx.size > 0:
+			value[exponent_nonzero_idx] = (mantissa / 4.0) * (2 ** (1 - bias))
+		inf_idx = np.nonzero( (exponent == 0x1F)*(mantissa == 0)*np.arange(len(value) ) )[0].astype(int)
+		if inf_idx.size > 0:
+			value[ind_idx] = np.inf
+		nan_idx = np.nonzero( (exponent == 0x1F)*(mantissa != 0)*np.arange(len(value) ) )[0].astype(int)
+		if nan_idx.size > 0:
+			value[nan_idx] = np.nan
 		value = value*(sign.astype(np.float32)*(-2) + 1)
 	else:
 		raise ValueError
