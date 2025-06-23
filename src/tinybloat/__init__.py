@@ -35,5 +35,8 @@ __all__ = [
 	"chunk",
 	"clamp",
 	"stack",
-	"outer"
+	"outer",
+	"limit_float_precision",
+	"limit_sint_precision",
+	"limit_uint_precision"
 ]

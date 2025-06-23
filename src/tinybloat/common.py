@@ -14,6 +14,9 @@ def _slice_to_square(t, offset = 0):
 		return t[0 - offset:, 0: offset]
 
 def diag(t, *args, **kwargs):
+	"""
+	See [torch.diag](https://docs.pytorch.org/docs/stable/generated/torch.diag.html)
+	"""
 	offset = 0
 	if "diagonal" in kwargs.keys():
 		offset = kwargs["diagonal"]
@@ -150,6 +153,10 @@ def limit_float_precision(obj,
 		):
 	"""
 	Limit the precision of a given module's float tensors.
+	:param obj: The model/module/object with tinygrad tensors that this function will be applied to.
+	:param low: The lowest-precision dtype to be allowed. If None is passed, the lowest precision float supported by the given device will be used.
+	:param low: The highest-precision dtype to be allowed. If None is passed, the highest precision float supported by the given device will be used.
+	:param new_device: The device that all the parameters will be moved to. If None is specified, their original device will be used.
 	"""
 	return _limit_dtype_group_precision(obj, low, high, new_device, tinygrad.dtypes.floats, tinygrad.dtypes.is_float)
 	
@@ -160,6 +167,10 @@ def limit_sint_precision(obj,
 		):
 	"""
 	Limit the precision of a given module's signed integer tensors.
+	:param obj: The model/module/object with tinygrad tensors that this function will be applied to.
+	:param low: The lowest-precision dtype to be allowed. If None is passed, the lowest precision signed int supported by the given device will be used.
+	:param low: The highest-precision dtype to be allowed. If None is passed, the highest precision signed int supported by the given device will be used.
+	:param new_device: The device that all the parameters will be moved to. If None is specified, their original device will be used.
 	"""
 	is_signed_int = lambda x: tinygrad.dtypes.is_int(x) and (not tinygrad.dtypes.is_unsigned(x) )
 	return _limit_dtype_group_precision(obj, low, high, new_device, tinygrad.dtypes.sints, is_signed_int)
