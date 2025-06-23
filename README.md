@@ -15,6 +15,10 @@ Contributions to this codebase require only 2 things:
 
 ## Roadmap
 These are functionality that should be reimplemented in the future:
+### High priority:
+- Function for reliably determining the supported data types of a given hardware device
+- Conversion of fp8e4m3 and fp8e5m2 tensors to float32 without relying on specific hardware backends
+### Lower priority:
 - [All the loss functions from pytorch](https://docs.pytorch.org/docs/stable/nn.html#loss-functions)
 - [torch.nn.CosineSimilarity](https://docs.pytorch.org/docs/stable/generated/torch.nn.CosineSimilarity.html#torch.nn.CosineSimilarity)
 - [torch.nn.PairwiseDistance](https://docs.pytorch.org/docs/stable/generated/torch.nn.PairwiseDistance.html#torch.nn.PairwiseDistance)
