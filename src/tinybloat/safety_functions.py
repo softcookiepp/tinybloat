@@ -4,6 +4,8 @@
 import tinygrad
 import numpy as np
 from typing import Union
+from .complex_tensor import ComplexTensor
+from .compatibility import convert_fp8
 
 def max(inp, dim = None, axis = None, keepdim = False, always_return_argmax = False):
 	if dim is None:
@@ -56,6 +58,17 @@ def argmax(inp, dim = None, axis = None, keepdim = False):
 	_max, _argmax = max(inp, dim, axis, keepdim, True)
 	return _argmax
 
-def cast(t, dt):
+def cast(t: Union[tinygrad.Tensor, ComplexTensor], dt: tinygrad.dtype.DType):
+	"""
+	Safely cast tensor types even if the given backend does not support it.
+	"""
+	# if it isn't supported on the target device, there is no point in continuing
 	dev = t.device
+	assert tinygrad.device.is_dtype_supported(dt, dev)
+	if tinygrad.device.is_dtype_supported(t.dtype, dev):
+		return t.cast(dt)
+	elif t.dtype in tinygrad.dtypes.fp8s:
+		
+		return convert_fp8(t, dt)
+		
 	return t.to("CPU").cast(dt).to(dev)
