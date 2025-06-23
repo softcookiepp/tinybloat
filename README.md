@@ -14,5 +14,8 @@ Contributions to this codebase require only 2 things:
 2) Unit tests must be written to validate it against the original implementation (usually pytorch or numpy.)
 
 ## Roadmap
-These are functionality that should be implemented in the future:
+These are functionality that should be reimplemented in the future:
 - [All the loss functions from pytorch](https://docs.pytorch.org/docs/stable/nn.html#loss-functions)
+- [torch.nn.CosineSimilarity](https://docs.pytorch.org/docs/stable/generated/torch.nn.CosineSimilarity.html#torch.nn.CosineSimilarity)
+- [torch.nn.PairwiseDistance](https://docs.pytorch.org/docs/stable/generated/torch.nn.PairwiseDistance.html#torch.nn.PairwiseDistance)
+- any other functionality that torch or other ML libraries have
