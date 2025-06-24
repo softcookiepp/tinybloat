@@ -3,6 +3,7 @@ from tinygrad.device import is_dtype_supported
 import numpy as np
 from .safety_functions import cast
 from typing import Union, Optional, Tuple
+from .complex_tensor import ComplexTensor
 
 def _slice_to_square(t, offset = 0):
 	if len(t.shape) == 1:
@@ -261,7 +262,7 @@ def stack(tensors, dim = 0, out = None):
 	assert_same_device(tbase.device, trest)
 	return tbase.stack(*trest, dim = dim)
 
-def outer(u: union[tinygrad.Tensor, ComplexTensor], v: union[tinygrad.Tensor, ComplexTensor]):
+def outer(u: Union[tinygrad.Tensor, ComplexTensor], v: Union[tinygrad.Tensor, ComplexTensor]):
 	"""
 	Compute the outer product of two tensors.
 	"""
