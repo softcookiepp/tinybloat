@@ -211,6 +211,9 @@ def cat(tensors, dim = 0):
 	return tbase.cat(*trest, dim = dim)
 
 def cumprod(inp, dim, dtype=None, out=None):
+	"""
+	See [torch.cumprod](https://docs.pytorch.org/docs/stable/generated/torch.cumprod.html)
+	"""
 	# first, get the slices used in the __getitem__ call for each element
 	slices = []
 	for i in range(len(inp.shape)):
@@ -258,7 +261,10 @@ def stack(tensors, dim = 0, out = None):
 	assert_same_device(tbase.device, trest)
 	return tbase.stack(*trest, dim = dim)
 
-def outer(u, v):
+def outer(u: union[tinygrad.Tensor, ComplexTensor], v: union[tinygrad.Tensor, ComplexTensor]):
+	"""
+	Compute the outer product of two tensors.
+	"""
 	assert len(u.shape) == len(v.shape) == 1, "Both supplied tensors must be 1D"
 	u_expanded = u.reshape(-1, 1).expand(-1, v.shape[0])
 	v_expanded = v.reshape(1, -1).expand(u.shape[0], -1)
