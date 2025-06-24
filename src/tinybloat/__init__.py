@@ -38,5 +38,6 @@ __all__ = [
 	"outer",
 	"limit_float_precision",
 	"limit_sint_precision",
-	"limit_uint_precision"
+	"limit_uint_precision",
+	"shard_model_"
 ]

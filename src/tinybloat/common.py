@@ -2,7 +2,7 @@ import tinygrad
 from tinygrad.device import is_dtype_supported
 import numpy as np
 from .safety_functions import cast
-from typing import Union, Optional
+from typing import Union, Optional, Tuple
 
 def _slice_to_square(t, offset = 0):
 	if len(t.shape) == 1:
@@ -182,6 +182,10 @@ def limit_uint_precision(obj,
 		):
 	"""
 	Limit the precision of a given module's unsigned integer tensors.
+	:param obj: The model/module/object with tinygrad tensors that this function will be applied to.
+	:param low: The lowest-precision dtype to be allowed. If None is passed, the lowest precision unsigned int supported by the given device will be used.
+	:param low: The highest-precision dtype to be allowed. If None is passed, the highest precision unsigned int supported by the given device will be used.
+	:param new_device: The device that all the parameters will be moved to. If None is specified, their original device will be used.
 	"""
 	is_unsigned_int = lambda x: tinygrad.dtypes.is_int(x) and tinygrad.dtypes.is_unsigned(x)
 	return _limit_dtype_group_precision(obj, low, high, new_device, tinygrad.dtypes.uints, is_unsigned_int)
@@ -259,3 +263,16 @@ def outer(u, v):
 	u_expanded = u.reshape(-1, 1).expand(-1, v.shape[0])
 	v_expanded = v.reshape(1, -1).expand(u.shape[0], -1)
 	return u_expanded * v_expanded
+
+def shard_model_(model, devices: Tuple[str], axis: Optional[Union[int, None]] = None):
+	"""
+	Apply tinygrad.Tensor.shard_ to every tensor in a given model.
+	:param model: The model whose tensors to apply shard_ to. Must have at least one tinygrad.Tensor member.
+	:param devices: The devices to shard the model's tensors across.
+	:param axis: The tensor axis on which to shard. If None, the parameters will be split across all GPUs
+	"""
+	state_dict = tinygrad.nn.state.get_state_dict(model)
+	assert len(state_dict.keys() ) > 0, "A valid model was not passed"
+	for k, v in state_dict.items():
+		v.shard_(devices, axis = axis)
+	return model
