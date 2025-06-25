@@ -3,6 +3,7 @@ from .internal import get_tensor_memoryview
 import numpy as np
 from typing import Union, Optional, Tuple
 import subprocess
+import itertools
 
 _longlong_support_status = {}
 
@@ -24,6 +25,44 @@ def device_supports_longlong(dev: str) -> bool:
 	if dev in _longlong_support_status.keys():
 		return _longlong_support_status[dev]
 	return _device_supports_longlong(dev)
+
+def _recursive_get_uop_list(uop):
+	uops = []
+	uops.append(uop)
+	for child in uop.src:
+		for new_uop in _recursive_get_uop_list(child):
+			uops.append(new_uop)
+	return uops
+	
+def _recursive_get_items_of_type(obj, python_type):
+	if isinstance(obj, python_type):
+		yield obj
+	elif isinstance(obj, tuple) or isinstance(obj, list):
+		for item in obj:
+			if isinstance(item, python_type):
+				yield item
+	elif isinstance(obj, dict):
+		for item in _recursive_get_items_of_type(list(obj.values() ), python_type):
+			yield item
+	elif hasattr(obj, "__dict__"):
+		for item in _recursive_get_items_of_type(obj.__dict__, python_type):
+			yield item
+
+def tensor_requires_longlong(t: tinygrad.Tensor):
+	raise NotImplementedError
+	# anything larger than this requires a longlong
+	int_max = np.iinfo(np.dtype("int64") ).max
+	
+	# we need a uop list in order to parse the arguments to find an int
+	uop_list = _recursive_get_uop_list(t.uop)
+	args = []
+	for uop in uop_list:
+		args.append(uop.arg)
+	for target in _recursive_get_items_of_type(args, int):
+		if target > int_max:
+			return True
+	return False
+	
 
 _dtype_table = {
 	# device: [supported]
