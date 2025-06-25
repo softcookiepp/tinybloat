@@ -72,3 +72,7 @@ def interpolate(inp,
 	else:
 		assert isinstance(size, tuple)
 	return inp.interpolate(size, mode, align_corners)
+
+
+def normalize(inp: tinygrad.Tensor, p = 2.0, dim = 1, eps = 1.0e-12, out = None):
+	raise NotImplementedError
