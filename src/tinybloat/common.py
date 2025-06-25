@@ -119,7 +119,12 @@ def _limit_dtype_group_precision(obj,
 	high_size = np.inf
 	if isinstance(high, tinygrad.dtype.DType):
 		high_size = high.itemsize
-	sd = tinygrad.nn.state.get_state_dict(obj)
+	if isinstance(obj, tinygrad.Tensor):
+		# just make a dummy state dict lmao
+		sd = {"tensor": obj}
+	else:
+		# assume obj has tinygrad.Tensor instances somewhere in its heirarchy
+		sd = tinygrad.nn.state.get_state_dict(obj)
 	for k, v in sd.items():
 		if new_device is None:
 			new_device = v.device
@@ -190,7 +195,9 @@ def limit_uint_precision(obj,
 	"""
 	is_unsigned_int = lambda x: tinygrad.dtypes.is_int(x) and tinygrad.dtypes.is_unsigned(x)
 	return _limit_dtype_group_precision(obj, low, high, new_device, tinygrad.dtypes.uints, is_unsigned_int)
-	
+
+def cast_to_supported_types(obj, ):
+
 def nonzero(inp, as_tuple = False):
 	# It is going to be very difficult to write this function
 	# in a manner that is JIT-compatible :c

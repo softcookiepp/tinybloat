@@ -287,3 +287,7 @@ def test_convert_fp8_safely():
 	ttorch = ttorch.to(torch.float32)
 	ttiny = tinybloat.safety_functions.cast(ttiny, tinygrad.dtypes.float32)
 	assert mse(ttorch.numpy(), ttiny.numpy() ) == 0.0
+	
+def test_device_supports_dtype():
+	for dt in tinygrad.dtypes.all:
+		tinybloat.compatibility.device_supports_dtype(tinygrad.Device.DEFAULT, dt)

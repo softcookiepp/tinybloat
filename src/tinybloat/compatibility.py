@@ -1,6 +1,7 @@
 import tinygrad
 from .internal import get_tensor_memoryview
 import numpy as np
+from typing import Union, Optional, Tuple
 
 _longlong_support_status = {}
 
@@ -23,21 +24,47 @@ def device_supports_longlong(dev: str) -> bool:
 		return _longlong_support_status[dev]
 	return _device_supports_longlong(dev)
 
-def probe_tg_dtypes(tg_device: str):
+_dtype_table = {
+	# device, supported, uns
+}
+
+def _test_dtype(dtype, device):
+	a = tinygrad.Tensor.randn(4, dtype = dtype, device = device).realize()
+	return True
+
+def _probe_tg_dtypes(tg_device: str):
+	"""
+	Doing this because I straight-up don't trust tinygrad to be accurate about this
+	"""
 	supported_dtypes = []
 	unsupported_dtypes = []
 	for dt in iter_tg_dtypes():
 		if dt == tinygrad.dtypes.void:
-			# torch has no void, and almost no backends support handling it directly
+			# does this even matter?
 			continue
 		
 		# this is where we probe
-		if is_dtype_supported(dt, tg_device):
+		if _test_dtype(dt, tg_device):
 			supported_dtypes.append(dt)
 		else:
 			unsupported_dtypes.append(dt)
 	return supported_dtypes, unsupported_dtypes
 
+def device_supports_dtype(device: str, dtype):
+	if device in _dtype_table.keys():
+		return dtype in _dtype_table[device]
+	_dtype_table[device] = _probe_tg_types(tg_device)[0]
+	return dtype in _dtype_table[device]
+	
+def get_device_float_bounds(device: str):
+	raise NotImplementedError
+	
+def get_device_sint_bounds(device: str):
+	raise NotImplementedError
+
+def get_device_uint_bounds(device: str):
+	raise NotImplementedError
+	
 def assert_dtype_supported(device: str, dtype: tinygrad.dtype.DType):
 	raise NotImplementedError
 	
