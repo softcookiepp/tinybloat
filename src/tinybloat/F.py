@@ -76,4 +76,4 @@ def interpolate(inp,
 
 
 def normalize(inp: tinygrad.Tensor, p = 2.0, dim = 1, eps = 1.0e-12, out = None):
-	return inp / tinygrad.Tensor.maximum(linalg.norm(inp, p, dim), eps )
+	return inp / tinygrad.Tensor.maximum(linalg.norm(inp, p, dim, keepdim = True), eps )

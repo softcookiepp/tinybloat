@@ -2,6 +2,7 @@ import tinygrad
 from .internal import get_tensor_memoryview
 import numpy as np
 from typing import Union, Optional, Tuple
+import subprocess
 
 _longlong_support_status = {}
 
@@ -33,7 +34,7 @@ def _test_dtype(dtype, device):
 		try:
 			a = (tinygrad.Tensor.randn(4, dtype = dtype, device = device) + 1).realize().numpy()
 			return True
-		except tinygrad.device.CompileError:
+		except (tinygrad.device.CompileError, subprocess.CalledProcessError) as e:
 			return False
 	return False
 
