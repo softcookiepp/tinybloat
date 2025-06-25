@@ -199,7 +199,7 @@ def limit_uint_precision(obj,
 
 def cast_to_supported_and_move_(obj, new_device: Optional[str] = None):
 	"""
-	Cast all parameters/tensors of a model to dtypes supported by new_device, and 
+	Cast all parameters/tensors of a model or tensor to dtypes supported by new_device, and 
 	"""
 	if new_device is None:
 		new_device = tinygrad.Device.DEFAULT
