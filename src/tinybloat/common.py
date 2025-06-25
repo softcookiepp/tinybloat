@@ -4,6 +4,7 @@ import numpy as np
 from .safety_functions import cast
 from typing import Union, Optional, Tuple
 from .complex_tensor import ComplexTensor
+from . import compatibility
 
 def _slice_to_square(t, offset = 0):
 	if len(t.shape) == 1:
@@ -161,7 +162,7 @@ def limit_float_precision(obj,
 	Limit the precision of a given module's float tensors.
 	:param obj: The model/module/object with tinygrad tensors that this function will be applied to.
 	:param low: The lowest-precision dtype to be allowed. If None is passed, the lowest precision float supported by the given device will be used.
-	:param low: The highest-precision dtype to be allowed. If None is passed, the highest precision float supported by the given device will be used.
+	:param high: The highest-precision dtype to be allowed. If None is passed, the highest precision float supported by the given device will be used.
 	:param new_device: The device that all the parameters will be moved to. If None is specified, their original device will be used.
 	"""
 	return _limit_dtype_group_precision(obj, low, high, new_device, tinygrad.dtypes.floats, tinygrad.dtypes.is_float)
@@ -175,7 +176,7 @@ def limit_sint_precision(obj,
 	Limit the precision of a given module's signed integer tensors.
 	:param obj: The model/module/object with tinygrad tensors that this function will be applied to.
 	:param low: The lowest-precision dtype to be allowed. If None is passed, the lowest precision signed int supported by the given device will be used.
-	:param low: The highest-precision dtype to be allowed. If None is passed, the highest precision signed int supported by the given device will be used.
+	:param high: The highest-precision dtype to be allowed. If None is passed, the highest precision signed int supported by the given device will be used.
 	:param new_device: The device that all the parameters will be moved to. If None is specified, their original device will be used.
 	"""
 	is_signed_int = lambda x: tinygrad.dtypes.is_int(x) and (not tinygrad.dtypes.is_unsigned(x) )
@@ -190,13 +191,27 @@ def limit_uint_precision(obj,
 	Limit the precision of a given module's unsigned integer tensors.
 	:param obj: The model/module/object with tinygrad tensors that this function will be applied to.
 	:param low: The lowest-precision dtype to be allowed. If None is passed, the lowest precision unsigned int supported by the given device will be used.
-	:param low: The highest-precision dtype to be allowed. If None is passed, the highest precision unsigned int supported by the given device will be used.
+	:param high: The highest-precision dtype to be allowed. If None is passed, the highest precision unsigned int supported by the given device will be used.
 	:param new_device: The device that all the parameters will be moved to. If None is specified, their original device will be used.
 	"""
 	is_unsigned_int = lambda x: tinygrad.dtypes.is_int(x) and tinygrad.dtypes.is_unsigned(x)
 	return _limit_dtype_group_precision(obj, low, high, new_device, tinygrad.dtypes.uints, is_unsigned_int)
 
-def cast_to_supported_types(obj, ):
+def cast_to_supported_and_move_(obj, new_device: Optional[str] = None):
+	"""
+	Cast all parameters/tensors of a model to dtypes supported by new_device, and 
+	"""
+	if new_device is None:
+		new_device = tinygrad.Device.DEFAULT
+	elif isinstance(new_device, tuple):
+		raise NotImplementedError
+	low_float, high_float = compatibility.get_device_float_bounds(new_device)
+	low_sint, high_sint = compatibility.get_device_sint_bounds(new_device)
+	low_uint, high_uint = compatibility.get_device_uint_bounds(new_device)
+	obj = limit_float_precision(obj, low_float, high_float, new_device)
+	obj = limit_sint_precision(obj, low_sint, high_sint, new_device)
+	obj = limit_uint_precision(obj, low_uint, high_uint, new_device)
+	return obj
 
 def nonzero(inp, as_tuple = False):
 	# It is going to be very difficult to write this function

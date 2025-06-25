@@ -39,5 +39,6 @@ __all__ = [
 	"limit_float_precision",
 	"limit_sint_precision",
 	"limit_uint_precision",
-	"shard_model_"
+	"shard_model_",
+	"cast_to_supported_and_move_"
 ]

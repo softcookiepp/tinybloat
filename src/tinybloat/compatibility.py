@@ -25,12 +25,17 @@ def device_supports_longlong(dev: str) -> bool:
 	return _device_supports_longlong(dev)
 
 _dtype_table = {
-	# device, supported, uns
+	# device: [supported]
 }
 
 def _test_dtype(dtype, device):
-	a = tinygrad.Tensor.randn(4, dtype = dtype, device = device).realize()
-	return True
+	if tinygrad.device.is_dtype_supported(dtype, device):
+		try:
+			a = (tinygrad.Tensor.randn(4, dtype = dtype, device = device) + 1).realize().numpy()
+			return True
+		except tinygrad.device.CompileError:
+			return False
+	return False
 
 def _probe_tg_dtypes(tg_device: str):
 	"""
@@ -38,7 +43,7 @@ def _probe_tg_dtypes(tg_device: str):
 	"""
 	supported_dtypes = []
 	unsupported_dtypes = []
-	for dt in iter_tg_dtypes():
+	for dt in tinygrad.dtypes.all:
 		if dt == tinygrad.dtypes.void:
 			# does this even matter?
 			continue
@@ -53,20 +58,32 @@ def _probe_tg_dtypes(tg_device: str):
 def device_supports_dtype(device: str, dtype):
 	if device in _dtype_table.keys():
 		return dtype in _dtype_table[device]
-	_dtype_table[device] = _probe_tg_types(tg_device)[0]
+	_dtype_table[device] = _probe_tg_dtypes(device)[0]
 	return dtype in _dtype_table[device]
 	
+def _get_device_type_group_bounds(device: str, dt_list):
+	low = None
+	for dt in sorted(dt_list, key = lambda x: x.itemsize):
+		if device_supports_dtype(device, dt):
+			low = dt
+			break
+	assert not low is None
+	high = None
+	for dt in sorted(dt_list, key = lambda x: -1*x.itemsize):
+		if device_supports_dtype(device, dt):
+			high = dt
+			break
+	assert not high is None
+	return low, high
+	
 def get_device_float_bounds(device: str):
-	raise NotImplementedError
+	return _get_device_type_group_bounds(device, tinygrad.dtypes.floats)
 	
 def get_device_sint_bounds(device: str):
-	raise NotImplementedError
+	return _get_device_type_group_bounds(device, tinygrad.dtypes.sints)
 
 def get_device_uint_bounds(device: str):
-	raise NotImplementedError
-	
-def assert_dtype_supported(device: str, dtype: tinygrad.dtype.DType):
-	raise NotImplementedError
+	return _get_device_type_group_bounds(device, tinygrad.dtypes.sints)
 	
 def convert_fp8(fp8_tensor, dtype):
 	"""

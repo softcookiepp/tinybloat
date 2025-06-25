@@ -291,3 +291,16 @@ def test_convert_fp8_safely():
 def test_device_supports_dtype():
 	for dt in tinygrad.dtypes.all:
 		tinybloat.compatibility.device_supports_dtype(tinygrad.Device.DEFAULT, dt)
+
+def test_cast_to_supported_and_move_():
+	class DummyModule:
+		def __init__(self):
+			self.t1 = tinygrad.Tensor.arange(16, dtype = tinygrad.dtypes.int64, device = "CPU").realize()
+			self.t2 = tinygrad.Tensor.arange(16, dtype = tinygrad.dtypes.float16, device = "CPU").realize()
+	dummy = DummyModule()
+	assert dummy.t1.dtype == tinygrad.dtypes.int64
+	assert dummy.t2.dtype == tinygrad.dtypes.float16
+	device = tinygrad.Device.DEFAULT
+	tinybloat.cast_to_supported_and_move_(dummy, device)
+	assert dummy.t2.dtype != tinygrad.dtypes.float16 or tinygrad.device.is_dtype_supported(tinygrad.dtypes.float16, device)
+	assert dummy.t1.dtype != tinygrad.dtypes.int64 or tinygrad.device.is_dtype_supported(tinygrad.dtypes.int64, device)
