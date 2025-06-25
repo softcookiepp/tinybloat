@@ -5,6 +5,7 @@ import tinygrad
 from .common import assert_same_device
 import numpy as np
 import math
+from . import linalg
 
 def group_norm(x, num_groups, weight = None, bias = None, eps = 1.0e-5):
 	# derived from the tinygrad source code c:
@@ -75,4 +76,4 @@ def interpolate(inp,
 
 
 def normalize(inp: tinygrad.Tensor, p = 2.0, dim = 1, eps = 1.0e-12, out = None):
-	raise NotImplementedError
+	return inp / tinygrad.Tensor.maximum(linalg.norm(inp, p, dim), eps )

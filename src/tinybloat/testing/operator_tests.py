@@ -304,3 +304,8 @@ def test_cast_to_supported_and_move_():
 	tinybloat.cast_to_supported_and_move_(dummy, device)
 	assert dummy.t2.dtype != tinygrad.dtypes.float16 or tinygrad.device.is_dtype_supported(tinygrad.dtypes.float16, device)
 	assert dummy.t1.dtype != tinygrad.dtypes.int64 or tinygrad.device.is_dtype_supported(tinygrad.dtypes.int64, device)
+
+def test_normalize():
+	a = make_test_data(4, 5, 6)
+	for dim in range(3):
+		_test_function([a, 2.0, dim], {}, torch.nn.functional.normalize, tinybloat.F.normalize)
