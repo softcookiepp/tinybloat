@@ -49,7 +49,6 @@ def _recursive_get_items_of_type(obj, python_type):
 			yield item
 
 def tensor_requires_longlong(t: tinygrad.Tensor):
-	raise NotImplementedError
 	# anything larger than this requires a longlong
 	int_max = np.iinfo(np.dtype("int64") ).max
 	
