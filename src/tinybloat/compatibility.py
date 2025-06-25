@@ -51,6 +51,8 @@ def _recursive_get_items_of_type(obj, python_type):
 def tensor_requires_longlong(t: tinygrad.Tensor):
 	# anything larger than this requires a longlong
 	int_max = np.iinfo(np.dtype("int64") ).max
+	if np.prod(t.shape) > int_max:
+		return True
 	
 	# we need a uop list in order to parse the arguments to find an int
 	uop_list = _recursive_get_uop_list(t.uop)
