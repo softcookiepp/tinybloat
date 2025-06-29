@@ -226,7 +226,21 @@ def test_argmax():
 	_test_function([a], {}, _test_argmax, _test_argmax)
 	for dim in [0, 1]:
 		_test_function([a], {"axis": dim}, _test_argmax, _test_argmax)
+
 		
+def test_argmin():
+	a = make_test_data(4, 8)
+	def _test_argmin(t, *args, **kwargs):
+		if isinstance(t, torch.Tensor):
+			out = torch.argmin(t, *args, **kwargs)
+		else:
+			out = tinybloat.argmin(t, *args, **kwargs)
+		return out
+		
+	_test_function([a], {}, _test_argmin, _test_argmin)
+	for dim in [0, 1]:
+		_test_function([a], {"axis": dim}, _test_argmin, _test_argmin)
+
 def test_nonzero():
 	a = np.arange(16).reshape(4, 4).astype(np.float32) - 4
 	f = lambda x: x.nonzero()
