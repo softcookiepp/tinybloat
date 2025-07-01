@@ -29,17 +29,20 @@ def pack_to_int4(int8_tensor: tinygrad.Tensor):
 	"""
 	Converts a int8 tensor into a int4 tensor
 	"""
-	raise NotImplementedError
-	
 	# first we gotta ensure the new shape is all even numbers
-	underlying_shape = []
-	shape = []
-	for d in int8_tensor.shape:
-		if d % 2 > 0:
-			d += 1
-		shape.append(d)
-		underlying_shape.append(d // 2)
+	int8_tensor = int8_tensor.reshape(-1)
+	if int8_tensor.shape[0] % 2 > 0:
+		int8_tensor = int8_tensor.pad([0, 1])
+	int8_tensor = int8_tensor.reshape(-1, 2)
 	
+	# Ok, now it should be reshaped into groups of 2.
+	# We can now do the thingy where we convert the bits!
+	a = int8_tensor[:, 0]
+	b = int8_tensor[:, 1]
+	
+	out = (a << 4) | (b & 0x0F)
+	print(out.numpy() )
+	raise NotImplementedError
 
 class QuantizedTensor:
 	def __init__(self,
