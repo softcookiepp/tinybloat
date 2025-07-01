@@ -37,8 +37,8 @@ def pack_to_int4(int8_tensor: tinygrad.Tensor):
 	
 	# Ok, now it should be reshaped into groups of 2.
 	# We can now do the thingy where we convert the bits!
-	a = int8_tensor[:, 0]
-	b = int8_tensor[:, 1]
+	a = int8_tensor[:, 0].bitcast(tinygrad.dtypes.uint8)
+	b = int8_tensor[:, 1].bitcast(tinygrad.dtypes.uint8)
 	
 	out = (a << 4) | (b & 0x0F)
 	print(out.numpy() )
