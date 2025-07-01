@@ -43,6 +43,9 @@ def pack_to_int4(int8_tensor: tinygrad.Tensor):
 	out = (a << 4) | (b & 0x0F)
 	print(out.numpy() )
 	raise NotImplementedError
+	
+def unpack_int4(packed: tinygrad.Tensor):
+	raise NotImplementedError
 
 class QuantizedTensor:
 	def __init__(self,
