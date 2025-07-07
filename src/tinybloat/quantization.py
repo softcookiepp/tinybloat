@@ -47,7 +47,7 @@ def pack_to_int4(int8_tensor: tinygrad.Tensor):
 def unpack_int4(packed: tinygrad.Tensor):
 	raise NotImplementedError
 
-class QuantizedTensor:
+class QTensor:
 	def __init__(self,
 				value: Union[tinygrad.Tensor, np.ndarray, list, tuple],
 				quantization_method: str,
