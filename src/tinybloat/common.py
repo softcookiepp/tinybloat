@@ -84,10 +84,13 @@ def module_on_device(obj, device: str):
 			return False
 	return True
 
-def move_to_device(obj, device: str):
+def move_to_device(obj, device: str, safe = True):
 	"""
 	Moves all tinygrad.Tensor instance members in an obj to device
 	"""
+	if safe:
+		# now that should be inplace
+		return cast_to_supported_and_move_(obj, device)
 	for k, v in tinygrad.nn.state.get_state_dict(obj).items():
 		v.replace(v.to(device) )
 	return obj
@@ -139,7 +142,10 @@ def _limit_dtype_group_precision(obj,
 						break
 				assert not target_type is None
 				# Now we just need to cast!
-				sd[k].replace(cast(v, target_type).to(new_device) )
+				if isinstance(obj, tinygrad.Tensor):
+					obj = cast(v, target_type).to(new_device)
+				else:
+					sd[k].replace(cast(v, target_type).to(new_device) )
 				assert v.dtype == target_type
 			elif v.dtype.itemsize < low_size:
 				# get next step up
@@ -149,7 +155,10 @@ def _limit_dtype_group_precision(obj,
 						target_type = ft
 						break
 				assert not target_type is None
-				sd[k].replace(cast(v, target_type).to(new_device) )
+				if isinstance(obj, tinygrad.Tensor):
+					obj = cast(v, target_type).to(new_device)
+				else:
+					sd[k].replace(cast(v, target_type).to(new_device) )
 				assert v.dtype == target_type
 	return obj
 
