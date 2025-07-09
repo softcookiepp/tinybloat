@@ -125,7 +125,6 @@ def compare_state_dicts(torch_module, tga_module, error_threshold = 1.0e-9):
 			error = mse(torch_value, tga_value)
 			if error >= error_threshold or np.isnan(error):
 				print("state dict values don't match for", torch_key)
-				#input()
 			assert error < error_threshold
 	except AssertionError:
 		# keys are not equal
@@ -159,8 +158,6 @@ def copy_state_dict(torch_module, tga_module, use_tg_adapter = _has_tg_adapter):
 	fn = os.path.join(d, "tmp.safetensors")
 	save_file(torch_module.state_dict(), fn)
 	state_dict = safe_load(fn)
-	#print(tinygrad.device.Device.default)
-	#input(list(state_dict.items())[0][1].device)
 	if use_tg_adapter:
 		tga_module.load_state_dict(state_dict)
 		compare_state_dicts(torch_module, tga_module)
@@ -264,72 +261,6 @@ def _test_key_errors(hf_dict, tg_dict, error_threshold = 1.0e-6, print_values = 
 			_test_key_errors(hf_item, tg_item, error_threshold, display_images, error_function)
 	else:
 		raise ValueError
-
-"""
-def _test_key_errors(hf_dict, tg_dict, error_threshold = 1.0e-9, print_values = True, display_images = False, error_function = mse):
-	print("types:", type(hf_dict), type(tg_dict) )
-	if isinstance(hf_dict, dict):
-		tested_keys = hf_dict.keys()
-		if list(hf_dict.keys() ) != list(tg_dict.keys() ):
-			print("Warning! keys don't match! Will only test the ones that do")
-			print(hf_dict.keys() )
-			print(tg_dict.keys() )
-			if len(hf_dict.keys() ) > len(tg_dict.keys() ):
-				tested_keys = tg_dict.keys()
-		for k in tested_keys:
-			print("key:", k)
-			hf_item = hf_dict[k]
-			tg_item = tg_dict[k]
-			_test_key_errors(hf_item, tg_item)
-	elif isinstance(hf_dict, torch.Tensor):
-		_test_key_errors(hf_dict.detach().numpy(), tg_dict.numpy(), error_threshold, display_images, error_function)
-	elif _has_pil and isinstance(hf_dict, Image.Image):
-		hf_dict.save("test_hf.png")
-		tg_dict.save("test_tg.png")
-		hf_item, tg_item = np.array(hf_dict), np.array(tg_dict)
-		_test_key_errors(hf_item, tg_item, error_threshold, display_images, error_function)
-	elif isinstance(hf_dict, list):
-		if isinstance(tg_dict, np.ndarray):
-			hf_dict = np.array(hf_dict).astype(np.float32)
-			_test_key_errors(hf_dict, tg_dict, error_threshold, display_images, error_function)
-		else:
-			# list of other sort, non-numerical
-			if len(hf_dict) != len(tg_dict):
-				print(hf_dict)
-				print(tg_dict)
-				raise ValueError("list length does not match")
-			for hf_item2, tg_item2 in zip(hf_dict, tg_dict):
-				_test_key_errors(hf_item2, tg_item2, error_threshold, display_images, error_function)
-	
-	elif isinstance(hf_dict, tuple):
-		# tuple of crap
-		for hf_item2, tg_item2 in zip(hf_dict, tg_dict):
-			_test_key_errors(hf_item2, tg_item2, error_threshold, display_images, error_function)
-	elif isinstance(hf_dict, object) and hasattr(hf_dict, "__dict__"):
-		_test_key_errors(hf_dict.__dict__, tg_dict.__dict__, error_threshold, display_images, error_function)
-	elif isinstance(hf_dict, np.ndarray):
-		error = mse(hf_dict, tg_dict)
-		print("value mse:", error, "\n")
-		if error > error_threshold or np.isnan(error):
-			print(hf_dict.shape, tg_dict.shape)
-			print(hf_dict)
-			print(tg_dict)
-			#input()
-		assert error < error_threshold
-	elif type(hf_dict) in [int, float]:
-		_test_key_errors(np.array(hf_dict), np.array(tg_dict), error_threshold, display_images, error_function)
-	elif isinstance(hf_dict, str):
-		hf_dict = str_to_numerical(hf_dict)
-		tg_dict = str_to_numerical(tg_dict)
-		_test_key_errors(hf_dict, tg_dict, error_threshold, display_images, error_function)
-	elif isinstance(hf_dict, type(None) ):
-		pass
-	elif isinstance(hf_dict, bool):
-		_test_key_errors(int(hf_dict), int(tg_dict), error_threshold, display_images, error_function)
-	else:
-		raise ValueError
-
-"""
 	
 def _process_arg(arg, device, use_tg_adapter):
 	if isinstance(arg, np.ndarray):
