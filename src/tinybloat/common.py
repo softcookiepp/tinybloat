@@ -146,7 +146,7 @@ def _limit_dtype_group_precision(obj,
 					obj = cast(v, target_type).to(new_device)
 				else:
 					sd[k].replace(cast(v, target_type).to(new_device) )
-				assert v.dtype == target_type
+					assert v.dtype == target_type
 			elif v.dtype.itemsize < low_size:
 				# get next step up
 				target_type = None
@@ -159,7 +159,7 @@ def _limit_dtype_group_precision(obj,
 					obj = cast(v, target_type).to(new_device)
 				else:
 					sd[k].replace(cast(v, target_type).to(new_device) )
-				assert v.dtype == target_type
+					assert v.dtype == target_type
 	return obj
 
 def limit_float_precision(obj,
