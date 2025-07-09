@@ -7,7 +7,7 @@ import pytest
 _gadget_available = False
 try:
 	import gadget
-	_gadget_available = True
+	_gadget_available = False
 except ImportError:
 	print("gadget-ml is required for testing quantization, but was not found.\nCurrently the official version is broken, so there is nothing that can be done for now :c ")
 
