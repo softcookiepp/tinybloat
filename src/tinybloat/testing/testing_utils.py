@@ -175,6 +175,11 @@ def norm_mse(predicted, actual):
 	return mse( normalize(predicted), normalize(actual) )
 
 def mse(predicted, actual):
+	if (not np.iscomplexobj(predicted) ) and (not np.iscomplexobj(predicted) ):
+		if isinstance(predicted, np.ndarray):
+			predicted = predicted.astype(np.float32)
+		if isinstance(actual, np.ndarray):
+			actual = actual.astype(np.float32)
 	assert predicted.shape == actual.shape, f"Shapes differ: {actual.shape} and {predicted.shape}"
 	return (np.sum( (predicted - actual)**2 ))/predicted.size
 	

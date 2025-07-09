@@ -323,3 +323,8 @@ def test_normalize():
 	a = make_test_data(4, 5, 6)
 	for dim in range(3):
 		_test_function([a, 2.0, dim], {}, torch.nn.functional.normalize, tinybloat.F.normalize)
+		
+def test_isin():
+	elem = np.array([ [1, 2], [2, 3] ]).astype(np.int32)
+	test_elem = np.array([2, 3]).astype(np.int32)
+	_test_function([elem, test_elem], {}, torch.isin, tinybloat.isin)

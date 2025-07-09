@@ -5,6 +5,14 @@ from .safety_functions import cast
 from typing import Union, Optional, Tuple
 from .complex_tensor import ComplexTensor
 from . import compatibility
+import inspect
+import os
+
+def is_jitted():
+	for item in inspect.stack():
+		if os.path.basename(item.filename) == "jit.py" and item.function == "__call__":
+			return True
+	return False
 
 def _slice_to_square(t, offset = 0):
 	if len(t.shape) == 1:
@@ -314,3 +322,10 @@ def shard_model_(model, devices: Tuple[str], axis: Optional[Union[int, None]] = 
 	for k, v in state_dict.items():
 		v.shard_(devices, axis = axis)
 	return model
+
+def isin(elements, test_elements, *args, assume_unique=False, invert=False):
+	assert not is_jitted(), "tinybloat.isin is not compatible with TinyJit due to being numpy-reliant"
+	out_dev = elements.device
+	e_np = elements.numpy()
+	te_np = test_elements.numpy()
+	return tinygrad.Tensor(np.isin(e_np, te_np), device = out_dev)
