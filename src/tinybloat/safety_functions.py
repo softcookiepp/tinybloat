@@ -7,6 +7,8 @@ from typing import Union
 from .complex_tensor import ComplexTensor
 from .compatibility import convert_fp8
 
+USE_SAFE = False
+
 def min(inp, dim = None, axis = None, keepdim = False, always_return_argmin = False):
 	if dim is None:
 		dim = axis
@@ -102,10 +104,14 @@ def max(inp, dim = None, axis = None, keepdim = False, always_return_argmax = Fa
 	return out, arg_max
 
 def argmax(inp, dim = None, axis = None, keepdim = False):
+	if not USE_SAFE:
+		return tinygrad.Tensor.argmax(inp, axis = dim, keepdim = keepdim)
 	_max, _argmax = max(inp, dim, axis, keepdim, True)
 	return _argmax
 
 def argmin(inp, dim = None, axis = None, keepdim = False):
+	if not USE_SAFE:
+		return tinygrad.Tensor.argmin(inp, axis = dim, keepdim = keepdim, dtype = inp.dtype)
 	_min, _argmin = min(inp, dim, axis, keepdim, True)
 	return _argmin
 
