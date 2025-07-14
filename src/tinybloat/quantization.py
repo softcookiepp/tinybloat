@@ -8,6 +8,11 @@ from gguf.quants import quant_shape_to_byte_shape, quant_shape_from_byte_shape
 from .common import hsplit, broadcast_lshift, broadcast_rshift
 
 class QTensor:
+	"""
+	A tensor with support for quantized data types, particularly those from GGUF.
+	It will also support lower-precision data types on hardware without native support
+	in the future.
+	"""
 	def __init__(self,
 				value: Union[tinygrad.Tensor, np.ndarray, list, tuple],
 				qtype,
