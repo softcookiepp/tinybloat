@@ -49,16 +49,17 @@ def test_bitcast():
 
 
 def test_dequantize():
-	path = hf_hub_download(repo_id = "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF", filename = "tinyllama-1.1b-chat-v1.0.Q6_K.gguf")
-	reader = gguf.GGUFReader(path)
-	for tensor in reader.tensors:
-		out = gguf.dequantize(tensor.data, tensor.tensor_type)
-		
-		quantized = tinygrad.Tensor(np.array(tensor.data) )
-		
-		# just make sure it actually loads the tensor correctly
-		assert mse(quantized.numpy(), tensor.data) < 1.0e-4
-		assert mse(np.array(quantized.shape), np.array(tensor.data.shape) ) < 1.0e-4
-		
-		qt = tinybloat.quantization.QTensor(quantized, tensor.tensor_type)
-		assert mse(qt.dequantize().numpy(), out) < 1.0e-4
+	for method in ["Q2_K", "Q3_K_L", "Q3_K_M", "Q3_K_S", "Q4_0", "Q6_K"]:
+		path = hf_hub_download(repo_id = "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF", filename = f"tinyllama-1.1b-chat-v1.0.{method}.gguf")
+		reader = gguf.GGUFReader(path)
+		for tensor in reader.tensors:
+			out = gguf.dequantize(tensor.data, tensor.tensor_type)
+			
+			quantized = tinygrad.Tensor(np.array(tensor.data) )
+			
+			# just make sure it actually loads the tensor correctly
+			assert mse(quantized.numpy(), tensor.data) < 1.0e-4
+			assert mse(np.array(quantized.shape), np.array(tensor.data.shape) ) < 1.0e-4
+			
+			qt = tinybloat.quantization.QTensor(quantized, tensor.tensor_type)
+			assert mse(qt.dequantize().numpy(), out) < 1.0e-4

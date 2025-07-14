@@ -340,3 +340,33 @@ def hsplit(inp, indices_or_sections):
 			new.append(inp.shape[-1] - sum(indices_or_sections) )
 		indices_or_sections = new
 	return inp.split(indices_or_sections, dim = -1)
+
+
+def _broadcast_shift(tensor, shifts, dim, right: bool):
+	if dim < 0:
+		dim = len(tensor.shape) - dim
+	assert tensor.shape[dim] == len(shifts) or tensor.shape[dim] == 1
+	if tensor.shape[dim] != 1:
+		# chunk it into multiple pieces
+		chunks = tensor.chunk(len(shift), dim = dim)
+	else:
+		# just repeat it
+		chunks = []
+		for i in shifts:
+			chunks.append(tensor)
+	
+	tocat = []
+	for chunk, shift in zip(chunks, shifts):
+		shift = int(shift)
+		if right:
+			chunk = chunk >> shift
+		else:
+			chunk = chunk << shift
+		tocat.append(chunk)
+	return tinygrad.Tensor.cat(*tocat, dim = dim)
+
+def broadcast_lshift(tensor, shifts, dim):
+	return _broadcast_shift(tensor, shifts, dim, False)
+	
+def broadcast_rshift(tensor, shifts, dim):
+	return _broadcast_shift(tensor, shifts, dim, True)
