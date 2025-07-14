@@ -1,5 +1,6 @@
-import gadget
-from gadget import ggml, GgmlModel
+#import gadget
+#from gadget import ggml, GgmlModel
+from huggingface_hub import hf_hub_download
 
 import tinybloat
 import tinygrad
@@ -11,8 +12,9 @@ import numpy as np
 
 # hopefully this should work...
 import diffusers
+import gguf
 
-def test_matmul():
+def _test_matmul():
 	"""
 	Just a basic test to make sure we are doing this stuff correctly
 	"""
@@ -46,5 +48,11 @@ def test_bitcast():
 	_test_function([d], {}, do_bitcast, do_bitcast)
 
 
-def test_quantize_4_0():
-	raise NotImplementedError
+def test_dequantize():
+	path = hf_hub_download(repo_id = "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF", filename = "tinyllama-1.1b-chat-v1.0.Q6_K.gguf")
+	reader = gguf.GGUFReader(path)
+	for tensor in reader.tensors:
+		out = gguf.dequantize(tensor.data, tensor.tensor_type)
+		quantized = tinygrad.Tensor(memoryview(tensor.data) )
+		tinybloat.quantization.dequantize(quantized, tensor.tensor_type)
+		assert False, f"{type(out)} {type(tensor.data)} {tensor.tensor_type}"

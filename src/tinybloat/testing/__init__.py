@@ -12,7 +12,7 @@ except ImportError:
 	print("gadget-ml is required for testing quantization, but was not found.\nCurrently the official version is broken, so there is nothing that can be done for now :c ")
 
 def run_tests():
-	tests = ["--pyargs", "tinybloat.testing.operator_tests", "tinybloat.testing.module_tests"]
+	tests = ["--pyargs", "tinybloat.testing.operator_tests", "tinybloat.testing.module_tests", "tinybloat.testing.quantization_tests"]
 	if _gadget_available:
 		tests.append("tinybloat.testing.quantization_tests")
 	pytest.main(tests)

@@ -57,3 +57,6 @@ class QTensor:
 		assert quantization_method in quantization_methods
 
 	
+def dequantize_to_np(gguf_tensor_data, gguf_tensor_type):
+	import gguf
+	raise NotImplementedError
