@@ -26,7 +26,8 @@ dependencies = [
 	"typing",
 	"argparse",
 	"pytest>=8.4.0",
-	"pdoc"
+	"pdoc",
+	"gguf"
 ]
 description = "Extended functionality for tinygrad"
 version = "0.0.3"

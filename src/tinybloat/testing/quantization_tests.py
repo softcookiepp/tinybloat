@@ -53,6 +53,12 @@ def test_dequantize():
 	reader = gguf.GGUFReader(path)
 	for tensor in reader.tensors:
 		out = gguf.dequantize(tensor.data, tensor.tensor_type)
-		quantized = tinygrad.Tensor(memoryview(tensor.data) )
-		tinybloat.quantization.dequantize(quantized, tensor.tensor_type)
-		assert False, f"{type(out)} {type(tensor.data)} {tensor.tensor_type}"
+		
+		quantized = tinygrad.Tensor(np.array(tensor.data) )
+		
+		# just make sure it actually loads the tensor correctly
+		assert mse(quantized.numpy(), tensor.data) < 1.0e-4
+		assert mse(np.array(quantized.shape), np.array(tensor.data.shape) ) < 1.0e-4
+		
+		qt = tinybloat.quantization.QTensor(quantized, tensor.tensor_type)
+		assert mse(qt.dequantize().numpy(), out) < 1.0e-4

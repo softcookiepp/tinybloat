@@ -2,7 +2,7 @@ import tinygrad
 from tinygrad.device import is_dtype_supported
 import numpy as np
 from .safety_functions import cast
-from typing import Union, Optional, Tuple
+from typing import Union, Optional, Tuple, Iterable
 from .complex_tensor import ComplexTensor
 from . import compatibility
 import inspect
@@ -329,3 +329,14 @@ def isin(elements, test_elements, *args, assume_unique=False, invert=False):
 	e_np = elements.numpy()
 	te_np = test_elements.numpy()
 	return tinygrad.Tensor(np.isin(e_np, te_np), device = out_dev)
+
+def hsplit(inp, indices_or_sections):
+	if isinstance(indices_or_sections, Iterable):
+		# ensure it all sums up
+		new = []
+		for idx in indices_or_sections:
+			new.append(idx)
+		if sum(indices_or_sections) < inp.shape[-1]:
+			new.append(inp.shape[-1] - sum(indices_or_sections) )
+		indices_or_sections = new
+	return inp.split(indices_or_sections, dim = -1)

@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 from .testing import run_tests
 
 from . import version
+from . import quantization
 
 
 def main() -> None:
