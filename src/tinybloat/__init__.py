@@ -5,6 +5,7 @@ so if you do you can jump right in!
 """
 
 from .complex_tensor import ComplexTensor
+from .quantization import QTensor
 from . import linalg
 from .common import *
 from .safety_functions import *
@@ -40,5 +41,6 @@ __all__ = [
 	"limit_sint_precision",
 	"limit_uint_precision",
 	"shard_model_",
-	"cast_to_supported_and_move_"
+	"cast_to_supported_and_move_",
+	"QTensor"
 ]

@@ -7,6 +7,31 @@ from gguf.constants import GGMLQuantizationType, GGML_QUANT_SIZES, QK_K
 from gguf.quants import quant_shape_to_byte_shape, quant_shape_from_byte_shape
 from .common import hsplit, broadcast_lshift, broadcast_rshift
 
+
+def _get_scale_min(scales: tinygrad.Tensor):
+	n_blocks = scales.shape[0]
+	scales = scales.bitcast(dtypes.uint8)
+	### Unpacking the following: ###
+	#  0 EEAAAAAA
+	#  1 FFBBBBBB
+	#  2 GGCCCCCC
+	#  3 HHDDDDDD
+	#  4 eeaaaaaa
+	#  5 ffbbbbbb
+	#  6 ggcccccc
+	#  7 hhdddddd
+	#  8 eeeeEEEE
+	#  9 ffffFFFF
+	# 10 ggggGGGG
+	# 11 hhhhHHHH
+	scales = scales.reshape(n_blocks, 3, 4)
+	d, m, m_d = scales.chunk(3, dim = -2)
+
+	sc = Tensor.cat(*[d & 0x3F, (m_d & 0x0F) | ((d >> 2) & 0x30)], dim = -1)
+	min = Tensor.cat(*[m & 0x3F, (m_d >> 4) | ((m >> 2) & 0x30)], dim = -1)
+
+	return (sc.reshape(n_blocks, 8), min.reshape(n_blocks, 8))
+
 class QTensor:
 	"""
 	A tensor with support for quantized data types, particularly those from GGUF.
@@ -35,8 +60,16 @@ class QTensor:
 			value = tinygrad.Tensor(np.array(value), device = device)
 		assert isinstance(value, tinygrad.Tensor)
 		self._tg = value
+		self._dequantized = None
 	
 	def dequantize(self):
+		"""
+		Returns the dequantized tensor, unrealized.
+		"""
+		# just to make things easier...
+		if not self._dequantized is None:
+			return self._dequantized
+		
 		if self._qtype == GGMLQuantizationType.F32:
 			return self._tg.bitcast(dtypes.float)
 		elif self._qtype == GGMLQuantizationType.F16:
@@ -120,6 +153,30 @@ class QTensor:
 
 				blocks = (dl * q).reshape(n_blocks, QK_K)
 				
+			elif self._qtype == GGMLQuantizationType.Q5_K:
+				d, rest = hsplit(blocks, [2])
+				dmin, rest = hsplit(rest, [2])
+				scales, rest = hsplit(rest, [12])
+				qh, qs = hsplit(rest, [QK_K // 8])
+
+				d = d.bitcast(dtypes.float16).cast(dtypes.float32)
+				dmin = dmin.bitcast(dtypes.float16).cast(dtypes.float32)
+				
+				# come back to this
+				sc, m = _get_scale_min(scales)
+
+				d = (d * sc.cast(dtypes.float32)).reshape(n_blocks, -1, 1)
+				dm = (dmin * m.cast(dtypes.float32)).reshape(n_blocks, -1, 1)
+
+				#ql = qs.reshape(n_blocks, -1, 1, 32) >> np.array([0, 4], dtype=np.uint8).reshape(1, 1, 2, 1)
+				ql = broadcast_rshift(qs.reshape(n_blocks, -1, 1, 32), [0, 4], 2)
+				#qh = qh.reshape((n_blocks, -1, 1, 32)) >> np.array([i for i in range(8)], dtype=np.uint8).reshape((1, 1, 8, 1))
+				qh = broadcast_rshift(qh.reshape(n_blocks, -1, 1, 32), np.arange(8), 2)
+				ql = (ql & 0x0F).reshape(n_blocks, -1, 32)
+				qh = (qh & 0x01).reshape(n_blocks, -1, 32)
+				q = (ql | (qh << 4)).cast(dtypes.float32)
+
+				blocks = (d * q - dm).reshape(n_blocks, QK_K)
 			elif self._qtype == GGMLQuantizationType.Q6_K:
 				ql, rest = hsplit(blocks, [QK_K // 2])
 				qh, rest = hsplit(rest, [QK_K // 4])
@@ -142,7 +199,7 @@ class QTensor:
 				qh = (qh & 0x03).reshape((n_blocks, -1, 32))
 				q = (ql | (qh << 4)).cast(dtypes.int8) - 32
 				q = q.reshape(n_blocks, QK_K // 16, -1).cast(dtypes.float)
-				blocks = (d * q).reshape((n_blocks, QK_K))
+				blocks = (d * q).reshape(n_blocks, QK_K)
 			else:
 				raise NotImplementedError(f"{_get_ggml_qtype_name(self._qtype)} dequantization not yet implemented")
 			
@@ -151,8 +208,27 @@ class QTensor:
 			assert blocks.shape[-1] == self._block_size
 			
 			# reshape into proper tensor shape
-			return blocks.reshape(*quant_shape_from_byte_shape(shape, self._qtype) )
+			self._dequantized = blocks.reshape(*quant_shape_from_byte_shape(shape, self._qtype) )
+			return self._dequantized
 		
+		def __getattr__(self, attr):
+			"""
+			@public
+			Provides a wrapper that allows
+			```
+			self.attribute
+			```
+			
+			to be treated as
+			
+			```
+			self.dequantize().attribute
+			```
+			"""
+			if hasattr(self._tg, attr):
+				return getattr(self.dequantize(), attr)
+			else:
+				raise AttributeError
 	
 
 def _get_ggml_qtype_name(qtype):
