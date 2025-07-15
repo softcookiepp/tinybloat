@@ -90,12 +90,11 @@ class QTensor:
 				val = val.reshape(-1, 1)
 				zeros = val.zeros_like()
 				template = val.zeros_like().cast(dtypes.uint32)
-				sign = val & 0b1000000000000000 >> 15
-				exponent = (val & 0b0111110000000000) >> 10
-				fraction = val & 0b0000001111111111
-				fraction_out = zeros.cat(val, dim = 1)
-				print(val.shape, fraction_out.shape)
-				raise NotImplementedError
+				sign_exponent = val & 0b1111110000000000
+				fraction = (val & 0b0000001111111111) << 6
+				fraction_out = fraction.cat(zeros, dim = 1).reshape(-1).bitcast(dtypes.uint32) >> 9
+				sign_exponent_out = sign_exponent.cat(zeros, dim = 1).reshape(-1).bitcast(dtypes.uint32)
+				return (fraction_out | sign_exponent_out).bitcast(dtypes.float).reshape(*out_shape)
 				
 				
 		
