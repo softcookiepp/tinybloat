@@ -87,10 +87,10 @@ class QTensor:
 				sign = ((val >> 15) & 0b1000000000000000).cast(dtypes.float)
 				exponent = ((val >> 10) & 0b0000000000011111).cast(dtypes.float)
 				mantissa = (val & 0b0000001111111111).cast(dtypes.float)
-				bias = 15
+				bias = 16
 				
 				# start with the default
-				value = ( (1 + mantissa / 512.0) * (2 ** (exponent - bias)) ).cast(dtypes.float)
+				value = ( (1 + mantissa / 1024.0) * (2 ** (exponent - bias)) ).cast(dtypes.float)
 				value = (exponent == 0).where(
 					(mantissa / 1024.0) * (2 ** (1 - bias)),
 					value
