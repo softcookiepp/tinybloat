@@ -103,7 +103,7 @@ class QTensor:
 					value[nan_idx] = np.nan
 				"""
 				value = value*(sign.cast(dtypes.float32)*(-2) + 1)
-				
+				return value
 				
 		
 		else:
