@@ -91,10 +91,12 @@ class QTensor:
 				
 				# start with the default
 				value = ( (1 + mantissa / 1024.0) * (2 ** (exponent - bias)) ).cast(dtypes.float)
+				value = (exponent == 0).where(
+					(mantissa / 1024.0) * (2 ** (1 - bias)),
+					value
+				)
+				value = (exponent == 0xFFF).where(np.nan, value)
 				"""
-				exponent_nonzero_idx = np.nonzero((exponent == 0)*Tensor.arange(len(value), device = val.device) )[0].astype(dtypes.int)
-				if exponent_nonzero_idx.size > 0:
-					value[exponent_nonzero_idx] = (mantissa / 8.0) * (2 ** (1 - bias))
 				inf_idx = np.nonzero( ( (exponent == 0xF) * (mantissa == 0) )*np.arange(len(value) ) )[0].astype(int)
 				if inf_idx.size > 0:
 					value[ind_idx] = np.inf
