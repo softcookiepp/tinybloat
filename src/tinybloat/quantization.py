@@ -83,7 +83,7 @@ class QTensor:
 			if device_supports_dtype(self._tg.device, dtypes.half):
 				return self._tg.bitcast(dtypes.half)
 			else:
-				return convert_fp16(self._tg, dtypes.float)
+				self._dequantized = convert_fp16(self._tg, dtypes.float)
 				
 		
 		else:
@@ -252,7 +252,8 @@ class QTensor:
 			
 			# reshape into proper tensor shape
 			self._dequantized = blocks.reshape(*quant_shape_from_byte_shape(shape, self._qtype) )
-			return self._dequantized
+		assert not self._dequantized is None
+		return self._dequantized
 		
 		def __getattr__(self, attr):
 			"""

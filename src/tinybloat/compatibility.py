@@ -128,21 +128,44 @@ def get_device_uint_bounds(device: str):
 	return _get_device_type_group_bounds(device, tinygrad.dtypes.sints)
 	
 def convert_fp16(fp16_tensor, dtype):
-	val = fp16_tensor.bitcast(dtypes.uint16)
-	sign = ((val >> 15) & 0b0000000000000001).cast(dtypes.float)
-	exponent = ((val >> 10) & 0b0000000000011111).cast(dtypes.float)
-	mantissa = (val & 0b0000001111111111).cast(dtypes.float)
-	bias = 127
-	
-	# start with the default
-	value = ( (1 + mantissa / 1024.0) * (2 ** (exponent - bias)) ).cast(dtypes.float)
-	value = (exponent == 0).where(
-		(mantissa / 1024.0) * (2 ** (1 - bias)),
-		value
-	)
-	value = (exponent == 0xFFF).where(np.nan, value)
-	value = value*( (-1)**sign.cast(dtypes.float32))
-	return value
+	raise NotImplementedError
+	if True:
+		bias = 15
+		conversion_ratio = 8192
+		
+		val = fp16_tensor.bitcast(dtypes.uint16)
+		sign = (val >> 15) & 0b0000000000000001
+		sign32 = sign.cast(dtypes.uint) << 31
+		exponent = ((val >> 10) & 0b0000000000011111)
+		exponent32 = ( exponent.cast(dtypes.uint) + (127 - bias) ) << 23
+		mantissa = (val & 0b0000001111111111)
+		mantissa32 = mantissa.cast(dtypes.uint) << 13
+		
+		value = (sign32 | exponent32 | mantissa32)
+		# pretty sure this can handle any subnormality?
+		
+		value = (exponent == 0xFFF).where(np.nan, value)
+		value = ((exponent == 0xFFF) & (mantissa == 0) ).where(np.inf, value)
+		return value
+		
+	else:
+		bias = 15
+		val = fp16_tensor.bitcast(dtypes.uint16)
+		sign = ((val >> 15) & 0b0000000000000001).cast(dtypes.float)
+		exponent = ((val >> 10) & 0b0000000000011111).cast(dtypes.float)
+		mantissa = (val & 0b0000001111111111).cast(dtypes.float)
+		
+		# start with the default
+		value = ( (1 + (mantissa/1024) ) * (2 ** (exponent - bias)) ).cast(dtypes.float)
+		
+		value = (exponent == 0).where(
+			(mantissa / 1024) * (2 ** (-14)),
+			value
+		)
+		
+		value = (exponent == 0xFFF).where(np.nan, value)
+		value = value*( (-1)**sign.cast(dtypes.float32))
+		return value
 	
 def convert_fp8(fp8_tensor, dtype):
 	"""
