@@ -32,6 +32,12 @@ def _get_scale_min(scales: tinygrad.Tensor):
 
 	return (sc.reshape(n_blocks, 8), min.reshape(n_blocks, 8))
 
+def _convert_f16_to_f32(t):
+	if device_supports_dtype(t.device, dtypes.half):
+		return t.bitcast(dtypes.half).cast(dtypes.float)
+	else:
+		return QTensor(t, GGMLQuantizationType.F16).dequantize()
+
 class QTensor:
 	"""
 	A tensor with support for quantized data types, particularly those from GGUF.
@@ -90,9 +96,10 @@ class QTensor:
 				scales, rest = hsplit(blocks, [QK_K // 16])
 				qs, rest = hsplit(rest, [QK_K // 4])
 				d, dmin = hsplit(rest, [2])
-
-				d = d.bitcast(dtypes.half).cast(dtypes.float)
-				dmin = dmin.bitcast(dtypes.half).cast(dtypes.float)
+				
+				# this might work!
+				d = _convert_f16_to_f32(d)
+				dmin = _convert_f16_to_f32(dmin)
 
 				# (n_blocks, 16, 1)
 				dl = (d * (scales & 0xF).cast(dtypes.float32)).reshape(n_blocks, QK_K // 16, 1)
@@ -115,7 +122,7 @@ class QTensor:
 				qs, rest = hsplit(rest, [QK_K // 4])
 				scales, d = hsplit(rest, [12])
 
-				d = d.bitcast(dtypes.float16).cast(dtypes.float32)
+				d = _convert_f16_to_f32(d)
 
 				# The scales are packed at 6-bit each in this pattern:
 				#  0: IIIIAAAA
@@ -159,7 +166,7 @@ class QTensor:
 			elif self._qtype == GGMLQuantizationType.Q4_0:
 				d, qs = hsplit(blocks, [2])
 
-				d = d.bitcast(dtypes.float16).cast(dtypes.float32)
+				d = _convert_f16_to_f32(d)
 
 				# qs = qs.reshape(n_blocks, -1, 1, cls.block_size // 2) >> np.array([0, 4], dtype=np.uint8).reshape((1, 1, 2, 1))
 				qs = broadcast_rshift(qs.reshape(n_blocks, -1, 1, self._block_size // 2), [0, 4], 2)
@@ -172,8 +179,8 @@ class QTensor:
 				dmin, rest = hsplit(rest, [2])
 				scales, qs = hsplit(rest, [12])
 
-				d = d.bitcast(dtypes.float16).cast(dtypes.float32)
-				dmin = dmin.bitcast(dtypes.float16).cast(dtypes.float32)
+				d = _convert_f16_to_f32(d)
+				dmin = _convert_f16_to_f32(dmin)
 
 				sc, m = _get_scale_min(scales)
 
@@ -192,8 +199,8 @@ class QTensor:
 				scales, rest = hsplit(rest, [12])
 				qh, qs = hsplit(rest, [QK_K // 8])
 
-				d = d.bitcast(dtypes.float16).cast(dtypes.float32)
-				dmin = dmin.bitcast(dtypes.float16).cast(dtypes.float32)
+				d = _convert_f16_to_f32(d)
+				dmin = _convert_f16_to_f32(dmin)
 				
 				# come back to this
 				sc, m = _get_scale_min(scales)
@@ -216,7 +223,7 @@ class QTensor:
 				scales, d = hsplit(rest, [QK_K // 16])
 				
 				scales = scales.bitcast(dtypes.int8).cast(dtypes.float)
-				d = d.bitcast(dtypes.half).cast(dtypes.float)
+				d = _convert_f16_to_f32(d)
 				d = (d * scales).reshape(n_blocks, QK_K // 16, 1)
 				
 				tocat = []

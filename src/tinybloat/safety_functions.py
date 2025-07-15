@@ -2,10 +2,12 @@
 # that sometimes do not compile.
 # Therefore, some will be reimplemented here.
 import tinygrad
+from tinygrad import dtypes, Tensor
 import numpy as np
 from typing import Union
 from .complex_tensor import ComplexTensor
 from .compatibility import convert_fp8
+
 
 USE_SAFE = False
 
@@ -127,5 +129,14 @@ def cast(t: Union[tinygrad.Tensor, ComplexTensor], dt: tinygrad.dtype.DType):
 	elif t.dtype in tinygrad.dtypes.fp8s:
 		
 		return convert_fp8(t, dt)
+	elif t.dtype == dtypes.half:
+		from tinybloat import QTensor
+		raise NotImplementedError
 		
 	return t.to("CPU").cast(dt).to(dev)
+
+
+def bitcast(t: Union[tinygrad.Tensor, ComplexTensor], dt: tinygrad.dtype.DType):
+	"""
+	Bitcast even if the backend doesn't support it.
+	"""
