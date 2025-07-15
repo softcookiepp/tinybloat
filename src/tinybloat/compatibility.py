@@ -72,7 +72,7 @@ _dtype_table = {
 def _test_dtype(dtype, device):
 	if tinygrad.device.is_dtype_supported(dtype, device):
 		try:
-			a = (tinygrad.Tensor.randn(4, dtype = dtype, device = device).cast(dtype).sin() ).realize().numpy()
+			a = (tinygrad.Tensor.randn(4, dtype = dtype, device = device).bitcast(dtype).sin() ).realize().numpy()
 			return True
 		except (tinygrad.device.CompileError, subprocess.CalledProcessError) as e:
 			return False
