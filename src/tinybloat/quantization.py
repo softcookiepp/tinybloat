@@ -73,7 +73,10 @@ class QTensor:
 		if self._qtype == GGMLQuantizationType.F32:
 			return self._tg.bitcast(dtypes.float)
 		elif self._qtype == GGMLQuantizationType.F16:
-			return self._tg.bitcast(dtypes.half)
+			if device_supports_dtype(self._tg.device, dtypes.half):
+				return self._tg.bitcast(dtypes.half)
+			else:
+				raise NotImplementedError
 		
 		else:
 			# for GGUF types
