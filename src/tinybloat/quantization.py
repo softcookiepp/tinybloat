@@ -6,7 +6,7 @@ import gguf
 from gguf.constants import GGMLQuantizationType, GGML_QUANT_SIZES, QK_K
 from gguf.quants import quant_shape_to_byte_shape, quant_shape_from_byte_shape
 from .common import hsplit, broadcast_lshift, broadcast_rshift
-from .compatibility import device_supports_dtype
+from .compatibility import device_supports_dtype, convert_fp16
 
 
 def _get_scale_min(scales: tinygrad.Tensor):
@@ -83,21 +83,7 @@ class QTensor:
 			if device_supports_dtype(self._tg.device, dtypes.half):
 				return self._tg.bitcast(dtypes.half)
 			else:
-				val = self._tg.bitcast(dtypes.uint16)
-				sign = ((val >> 15) & 0b1000000000000000).cast(dtypes.float)
-				exponent = ((val >> 10) & 0b0000000000011111).cast(dtypes.float)
-				mantissa = (val & 0b0000001111111111).cast(dtypes.float)
-				bias = 16
-				
-				# start with the default
-				value = ( (1 + mantissa / 1024.0) * (2 ** (exponent - bias)) ).cast(dtypes.float)
-				value = (exponent == 0).where(
-					(mantissa / 1024.0) * (2 ** (1 - bias)),
-					value
-				)
-				value = (exponent == 0xFFF).where(np.nan, value)
-				value = value*(sign.cast(dtypes.float32)*(-2) + 1)
-				return value
+				return convert_fp16(self._tg, dtypes.float)
 				
 		
 		else:
