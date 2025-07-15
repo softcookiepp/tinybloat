@@ -153,6 +153,36 @@ class QTensor:
 
 				blocks = (dl * q).reshape(n_blocks, QK_K)
 				
+			elif self._qtype == GGMLQuantizationType.Q4_0:
+				d, qs = hsplit(blocks, [2])
+
+				d = d.bitcast(dtypes.float16).cast(dtypes.float32)
+
+				# qs = qs.reshape(n_blocks, -1, 1, cls.block_size // 2) >> np.array([0, 4], dtype=np.uint8).reshape((1, 1, 2, 1))
+				qs = broadcast_rshift(qs.reshape(n_blocks, -1, 1, self._block_size // 2), [0, 4], 2)
+				qs = (qs & 0x0F).reshape(n_blocks, -1).cast(dtypes.int8) - 8
+
+				blocks = (d * qs.cast(dtypes.float32))
+			
+			elif self._qtype == GGMLQuantizationType.Q4_K:
+				d, rest = hsplit(blocks, [2])
+				dmin, rest = hsplit(rest, [2])
+				scales, qs = hsplit(rest, [12])
+
+				d = d.bitcast(dtypes.float16).cast(dtypes.float32)
+				dmin = dmin.bitcast(dtypes.float16).cast(dtypes.float32)
+
+				sc, m = _get_scale_min(scales)
+
+				d = (d * sc.cast(dtypes.float32)).reshape(n_blocks, -1, 1)
+				dm = (dmin * m.cast(dtypes.float32)).reshape(n_blocks, -1, 1)
+
+				#qs = qs.reshape(n_blocks, -1, 1, 32) >> np.array([0, 4], dtype=np.uint8).reshape(1, 1, 2, 1)
+				qs = broadcast_rshift(qs.reshape(n_blocks, -1, 1, 32), [0, 4], 2)
+				qs = (qs & 0x0F).reshape(n_blocks, -1, 32).cast(dtypes.float32)
+
+				blocks = (d * qs - dm).reshape(n_blocks, QK_K)
+				
 			elif self._qtype == GGMLQuantizationType.Q5_K:
 				d, rest = hsplit(blocks, [2])
 				dmin, rest = hsplit(rest, [2])
@@ -200,6 +230,7 @@ class QTensor:
 				q = (ql | (qh << 4)).cast(dtypes.int8) - 32
 				q = q.reshape(n_blocks, QK_K // 16, -1).cast(dtypes.float)
 				blocks = (d * q).reshape(n_blocks, QK_K)
+			
 			else:
 				raise NotImplementedError(f"{_get_ggml_qtype_name(self._qtype)} dequantization not yet implemented")
 			
