@@ -94,7 +94,7 @@ class QTensor:
 				exponent = (val & 0b0111110000000000) >> 10
 				fraction = val & 0b0000001111111111
 				fraction_out = zeros.cat(val, dim = 1)
-				print(fraction_out.shape)
+				print(val.shape, fraction_out.shape)
 				raise NotImplementedError
 				
 				
