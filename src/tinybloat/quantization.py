@@ -6,6 +6,7 @@ import gguf
 from gguf.constants import GGMLQuantizationType, GGML_QUANT_SIZES, QK_K
 from gguf.quants import quant_shape_to_byte_shape, quant_shape_from_byte_shape
 from .common import hsplit, broadcast_lshift, broadcast_rshift
+from .compatibility import device_supports_dtype
 
 
 def _get_scale_min(scales: tinygrad.Tensor):
