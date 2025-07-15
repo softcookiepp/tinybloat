@@ -89,7 +89,7 @@ class QTensor:
 				# one column
 				val = val.reshape(-1, 1)
 				zeros = val.zeros_like()
-				template = val.zeros_like.cast(dtypes.uint32)
+				template = val.zeros_like().cast(dtypes.uint32)
 				sign = val & 0b1000000000000000 >> 15
 				exponent = (val & 0b0111110000000000) >> 10
 				fraction = val & 0b0000001111111111
