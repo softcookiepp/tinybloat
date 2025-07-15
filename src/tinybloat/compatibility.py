@@ -128,7 +128,6 @@ def get_device_uint_bounds(device: str):
 	return _get_device_type_group_bounds(device, tinygrad.dtypes.sints)
 	
 def convert_fp16(fp16_tensor, dtype):
-	raise NotImplementedError
 	if True:
 		bias = 15
 		conversion_ratio = 8192
@@ -139,9 +138,10 @@ def convert_fp16(fp16_tensor, dtype):
 		exponent = ((val >> 10) & 0b0000000000011111)
 		exponent32 = ( exponent.cast(dtypes.uint) + (127 - bias) ) << 23
 		mantissa = (val & 0b0000001111111111)
-		mantissa32 = mantissa.cast(dtypes.uint) << 13
+		#0b000000000000000000001111111111
+		mantissa32 = mantissa.cast(dtypes.uint) << 12
 		
-		value = (sign32 | exponent32 | mantissa32)
+		value = ( (sign32 | exponent32) | mantissa32)
 		# pretty sure this can handle any subnormality?
 		
 		value = (exponent == 0xFFF).where(np.nan, value)
