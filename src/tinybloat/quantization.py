@@ -90,15 +90,34 @@ class QTensor:
 				val = val.reshape(-1, 1)
 				zeros = val.zeros_like()
 				template = val.zeros_like()
-				sign = (val >> 15).cast(dtypes.uint)
+				sign = (val >> 15)
 				exponent = ( (val & 0b0111110000000000) >> 10)
 				fraction = (val & 0b0000001111111111)
 				
 				exp_zero = (exponent == 0)
 				exp_nan = (exponent == 0b0000000000011111)
-				where_inf = (exp_nan == (fraction == 0) )
+				where_inf = (exp_nan & (fraction == 0) )
+				where_nan = (exp_nan & (fraction != 0) )
 				
-				raise NotImplementedError
+				# now what?
+				# first we gotta rebias and shift the exponent
+				exponent32 = (exponent.cast(dtypes.uint32) + (127 - 15) ) << 26
+				
+				# then we do the fraction..though I am a little unsure of how to do this.
+				fraction32 = fraction.cast(dtypes.uint32) << 21
+				
+				# then the sign
+				sign32 = sign.cast(dtypes.uint) << 30
+				
+				# then fuse them all together!
+				all32 = (exponent32 | fraction32 | sign32).bitcast(dtypes.float)
+				full_inf = all32.full_like(np.inf)
+				full_nan = all32.full_like(np.nan)
+				
+				# now of course, make the inf
+				all32 = where_inf.where(full_inf, all32)
+				all32 = where_nan.where(full_nan, all32)
+				return all32
 				
 				
 		
