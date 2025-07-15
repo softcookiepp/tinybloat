@@ -83,41 +83,26 @@ class QTensor:
 			if device_supports_dtype(self._tg.device, dtypes.half):
 				return self._tg.bitcast(dtypes.half)
 			else:
-				
 				val = self._tg.bitcast(dtypes.uint16)
-				out_shape = val.shape
-				# one column
-				val = val.reshape(-1, 1)
-				zeros = val.zeros_like()
-				template = val.zeros_like()
-				sign = (val >> 15)
-				exponent = ( (val & 0b0111110000000000) >> 10)
-				fraction = (val & 0b0000001111111111)
+				sign = ((val >> 15) & 0b1000000000000000).cast(dtypes.float)
+				exponent = ((val >> 10) & 0b0000000000011111).cast(dtypes.float)
+				mantissa = (val & 0b0000001111111111).cast(dtypes.float)
+				bias = 15
 				
-				exp_zero = (exponent == 0)
-				exp_nan = (exponent == 0b0000000000011111)
-				where_inf = (exp_nan & (fraction == 0) )
-				where_nan = (exp_nan & (fraction != 0) )
-				
-				# now what?
-				# first we gotta rebias and shift the exponent
-				exponent32 = (exponent.cast(dtypes.uint32) + (127 - 15) ) << 26
-				
-				# then we do the fraction..though I am a little unsure of how to do this.
-				fraction32 = fraction.cast(dtypes.uint32) << 21
-				
-				# then the sign
-				sign32 = sign.cast(dtypes.uint) << 30
-				
-				# then fuse them all together!
-				all32 = (exponent32 | fraction32 | sign32).bitcast(dtypes.float)
-				full_inf = all32.full_like(np.inf)
-				full_nan = all32.full_like(np.nan)
-				
-				# now of course, make the inf
-				all32 = where_inf.where(full_inf, all32)
-				all32 = where_nan.where(full_nan, all32)
-				return all32
+				# start with the default
+				value = ( (1 + mantissa / 1024.0) * (2 ** (exponent - bias)) ).cast(dtypes.float)
+				"""
+				exponent_nonzero_idx = np.nonzero((exponent == 0)*Tensor.arange(len(value), device = val.device) )[0].astype(dtypes.int)
+				if exponent_nonzero_idx.size > 0:
+					value[exponent_nonzero_idx] = (mantissa / 8.0) * (2 ** (1 - bias))
+				inf_idx = np.nonzero( ( (exponent == 0xF) * (mantissa == 0) )*np.arange(len(value) ) )[0].astype(int)
+				if inf_idx.size > 0:
+					value[ind_idx] = np.inf
+				nan_idx = np.nonzero( ( (exponent == 0xF) * (mantissa != 0) )*np.arange(len(value) ) )[0].astype(int)
+				if nan_idx.size > 0:
+					value[nan_idx] = np.nan
+				"""
+				value = value*(sign.cast(dtypes.float32)*(-2) + 1)
 				
 				
 		
