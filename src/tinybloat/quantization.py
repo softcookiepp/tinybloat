@@ -85,13 +85,13 @@ class QTensor:
 			else:
 				# TODO: update support for inf and nan; since the scope is limited, who really cares
 				inp = self._tg.bitcast(dtypes.uint16)
-				t1 = (inp & 0x7fff).cast(dtypes.uint)
-				t2 = (inp & 0x8000).cast(dtypes.uint)
-				t3 = (inp & 0x7c00).cast(dtypes.uint)
+				t1 = (inp & inp.full_like(0x7fff) ).cast(dtypes.uint)
+				t2 = (inp & inp.full_like(0x8000) ).cast(dtypes.uint)
+				t3 = (inp & inp.full_like(0x7c00) ).cast(dtypes.uint)
 				
 				t1 = t1 << 13
 				t2 = t2 << 16
-				t1 += 0x38000000
+				t1 += t1.full_like(0x38000000)
 				
 				t1 = (t3 != 0).cast(dtypes.uint) * t1
 				t1 = t1 | t2
