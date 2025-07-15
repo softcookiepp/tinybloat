@@ -1,4 +1,5 @@
 import tinygrad
+from tinygrad import dtypes
 from .internal import get_tensor_memoryview
 import numpy as np
 from typing import Union, Optional, Tuple
