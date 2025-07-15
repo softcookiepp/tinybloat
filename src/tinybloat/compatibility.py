@@ -129,7 +129,7 @@ def get_device_uint_bounds(device: str):
 	
 def convert_fp16(fp16_tensor, dtype):
 	val = fp16_tensor.bitcast(dtypes.uint16)
-	sign = ((val >> 15) & 0b1000000000000000).cast(dtypes.float)
+	sign = ((val >> 15) & 0b0000000000000001).cast(dtypes.float)
 	exponent = ((val >> 10) & 0b0000000000011111).cast(dtypes.float)
 	mantissa = (val & 0b0000001111111111).cast(dtypes.float)
 	bias = 127
@@ -141,7 +141,7 @@ def convert_fp16(fp16_tensor, dtype):
 		value
 	)
 	value = (exponent == 0xFFF).where(np.nan, value)
-	value = value*(sign.cast(dtypes.float32)*(-2) + 1)
+	value = value*( (-1)**sign.cast(dtypes.float32))
 	return value
 	
 def convert_fp8(fp8_tensor, dtype):
