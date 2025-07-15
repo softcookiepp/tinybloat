@@ -83,18 +83,19 @@ class QTensor:
 			if device_supports_dtype(self._tg.device, dtypes.half):
 				return self._tg.bitcast(dtypes.half)
 			else:
+				# TODO: update support for inf and nan; since the scope is limited, who really cares
+				inp = self._tg.bitcast(dtypes.uint16)
+				t1 = (inp & 0x7fff).cast(dtypes.uint)
+				t2 = (inp & 0x8000).cast(dtypes.uint)
+				t3 = (inp & 0x7c00).cast(dtypes.uint)
 				
-				val = self._tg.bitcast(dtypes.uint16)
-				out_shape = val.shape
-				# one column
-				val = val.reshape(-1, 1)
-				zeros = val.zeros_like()
-				template = val.zeros_like().cast(dtypes.uint32)
-				sign_exponent = val & 0b1111110000000000
-				fraction = (val & 0b0000001111111111) << 6
-				fraction_out = fraction.cat(zeros, dim = 1).reshape(-1).bitcast(dtypes.uint32) >> 9
-				sign_exponent_out = sign_exponent.cat(zeros, dim = 1).reshape(-1).bitcast(dtypes.uint32)
-				return (fraction_out | sign_exponent_out).bitcast(dtypes.float).reshape(*out_shape)
+				t1 = t1 << 13
+				t2 = t2 << 16
+				t1 += 0x38000000
+				
+				t1 = (t3 != 0).cast(dtypes.uint) * t1
+				t1 = t1 | t2
+				return t1.bitcast(dtypes.float)
 				
 				
 		
