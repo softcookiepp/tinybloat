@@ -90,20 +90,12 @@ class QTensor:
 				bias = 15
 				
 				# start with the default
-				value = ( (1 + mantissa / 1024.0) * (2 ** (exponent - bias)) ).cast(dtypes.float)
+				value = ( (1 + mantissa / 512.0) * (2 ** (exponent - bias)) ).cast(dtypes.float)
 				value = (exponent == 0).where(
 					(mantissa / 1024.0) * (2 ** (1 - bias)),
 					value
 				)
 				value = (exponent == 0xFFF).where(np.nan, value)
-				"""
-				inf_idx = np.nonzero( ( (exponent == 0xF) * (mantissa == 0) )*np.arange(len(value) ) )[0].astype(int)
-				if inf_idx.size > 0:
-					value[ind_idx] = np.inf
-				nan_idx = np.nonzero( ( (exponent == 0xF) * (mantissa != 0) )*np.arange(len(value) ) )[0].astype(int)
-				if nan_idx.size > 0:
-					value[nan_idx] = np.nan
-				"""
 				value = value*(sign.cast(dtypes.float32)*(-2) + 1)
 				return value
 				
