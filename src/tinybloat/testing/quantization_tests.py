@@ -62,4 +62,5 @@ def test_dequantize():
 			assert mse(np.array(quantized.shape), np.array(tensor.data.shape) ) < 1.0e-4
 			
 			qt = tinybloat.quantization.QTensor(quantized, tensor.tensor_type)
-			assert mse(qt.dequantize().numpy(), out) < 1.0e-4
+			error = mse(qt.dequantize().numpy(), out)
+			assert error < 1.0e-4, f"error too high: {error}"
