@@ -49,11 +49,19 @@ def test_bitcast():
 	_test_function([d], {}, do_bitcast, do_bitcast)
 
 def test_convert_fp16():
-	a = make_test_data(1024).astype(np.float16)
-	a_t = tinygrad.Tensor(a.view(np.uint16) )
-	out = tinybloat.compatibility.convert_fp16(a_t, tinygrad.dtypes.float32)
-	error = mse(out.numpy(), a.astype(np.float32) )
-	assert error < 1.0e-4, f"error too high: {error}"
+	for i, a in enumerate([make_test_data(1024).astype(np.float16), np.array([6.0975552e-5, 5.9604645e-8]).astype(np.float16), np.array([np.inf, np.inf]).astype(np.float16), np.array([np.nan, np.nan]).astype(np.float16) ]):
+		a_t = tinygrad.Tensor(a.view(np.uint16) )
+		out = tinybloat.compatibility.convert_fp16(a_t, tinygrad.dtypes.float32)
+		error = mse(out.numpy(), a.astype(np.float32) )
+		if i <2:
+			assert error < 1.0e-4, f"error too high: {error}"
+		else:
+			if i == 3:
+				# nan
+				assert np.isnan(error)
+			elif i == 2:
+				# inf
+				assert np.isinf(np.sum(out.numpy() ) )
 
 
 def test_dequantize():
