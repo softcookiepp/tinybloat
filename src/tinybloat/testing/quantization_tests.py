@@ -68,9 +68,9 @@ def test_tensor_constructor():
 	_test_dtypes = [
 		(torch.float, dtypes.float),
 		(torch.float16, dtypes.half),
-		#(torch.bfloat16, dtypes.bfloat16),
-		#(torch.float8_e4m3fn, dtypes.fp8e4m3),
-		#(torch.float8_e5m2, dtypes.fp8e5m2)
+		(torch.bfloat16, dtypes.bfloat16),
+		(torch.float8_e4m3fn, dtypes.fp8e4m3),
+		(torch.float8_e5m2, dtypes.fp8e5m2)
 	]
 	
 	for torch_dt, tiny_dt in _test_dtypes:

@@ -152,7 +152,7 @@ def convert_fp8(fp8_tensor, dtype):
 	"""
 	Convert a fp8 tensor to another dtype even if no backends on system support it
 	"""
-	raise NotImplementedError("Under maintenence")
+	#raise NotImplementedError("Under maintenence")
 	fp8_np = fp8_tensor.bitcast(dtypes.uint8)
 	value = None
 	if fp8_tensor.dtype == tinygrad.dtypes.fp8e4m3:
@@ -195,3 +195,25 @@ def convert_fp8(fp8_tensor, dtype):
 	else:
 		raise ValueError
 	return value.cast(dtype).reshape(fp8_tensor.shape)
+	
+def convert_bfloat16(bf16_tensor, dtype):
+	bias = 15
+	val = fp16_tensor.bitcast(dtypes.uint16)
+	sign = ((val >> 15) & 0b0000000000000001).cast(dtypes.float)
+	exponent = ((val >> 10) & 0b0000000000011111).cast(dtypes.float)
+	mantissa = (val & 0b0000001111111111).cast(dtypes.float)
+	
+	# start with the default
+	value = ( (1 + (mantissa/1024) ) * (2 ** (exponent - bias)) ).cast(dtypes.float)
+	
+	value = (exponent == 0).where(
+		(mantissa / 1024) * (2 ** (-14)),
+		value
+	)
+	
+	
+	value = ( (exponent == 0b11111) * (mantissa != 0) ).where(np.nan, value)
+	value = ( (exponent == 0b11111) * (mantissa == 0) ).where(np.inf, value)
+	value = value*( (-1)**sign.cast(dtypes.float32))
+	return value
+	raise NotImplementedError
