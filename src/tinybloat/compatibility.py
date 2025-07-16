@@ -147,54 +147,55 @@ def convert_fp16(fp16_tensor, dtype):
 	value = ( (exponent == 0b11111) * (mantissa == 0) ).where(np.inf, value)
 	value = value*( (-1)**sign.cast(dtypes.float32))
 	return value
+	
+def convert_fp8e4m3(fp8_tensor, dtype):
+	fp8_np = fp8_tensor.bitcast(dtypes.uint8)
+	sign = ((fp8_np >> 7) & 0x1).cast(dtypes.float32)
+	exponent = ((fp8_np >> 3) & 0xF).cast(dtypes.float32)
+	mantissa = (fp8_np & 0x7).cast(dtypes.float32)
+	bias = 7
+	
+	# start with the default
+	value = ( (1 + mantissa / 8.0) * (2 ** (exponent - bias)) ).cast(dtypes.float32)
+	
+	value = (exponent == 0).where(
+		(mantissa / 8) * (2 ** (1 - bias)),
+		value
+	)
+	
+	value = ( (exponent == 0xF) * (mantissa != 0) ).where(np.nan, value)
+	value = ( (exponent == 0xF) * (mantissa == 0) ).where(np.inf, value)
+	return ( value*( (-1)**sign.cast(dtypes.float32)) ).cast(dtype)
+	
+def convert_fp8e5m2(fp8_tensor, dtype):
+	fp8_np = fp8_tensor.bitcast(dtypes.uint8)
+	sign = ((fp8_np >> 7) & 0x1).cast(dtypes.float32)
+	exponent = ((fp8_np >> 2) & 0x1F).cast(dtypes.float32)
+	mantissa = (fp8_np & 0x3).cast(dtypes.float32)
+	bias = 15
+	
+	# start with the default
+	value = ( (1 + mantissa / 4.0) * (2 ** (exponent - bias)) ).cast(dtypes.float32)
+	
+	# subnormals
+	value = (exponent == 0).where(
+		(mantissa / 4) * (2 ** (1 - bias)),
+		value
+	)
+	
+	value = ( (exponent == 0x1F) * (mantissa != 0) ).where(np.nan, value)
+	value = ( (exponent == 0x1F) * (mantissa == 0) ).where(np.inf, value)
+	return ( value*( (-1)**sign.cast(dtypes.float32)) ).cast(dtype)
 
 def convert_fp8(fp8_tensor, dtype):
 	"""
 	Convert a fp8 tensor to another dtype even if no backends on system support it
 	"""
-	#raise NotImplementedError("Under maintenence")
-	fp8_np = fp8_tensor.bitcast(dtypes.uint8)
-	value = None
 	if fp8_tensor.dtype == tinygrad.dtypes.fp8e4m3:
-		sign = ((fp8_np >> 7) & 0x1).cast(dtypes.float32)
-		exponent = ((fp8_np >> 3) & 0xF).cast(dtypes.float32)
-		mantissa = (fp8_np & 0x7).cast(dtypes.float32)
-		bias = 7
-		
-		# start with the default
-		value = ( (1 + mantissa / 8.0) * (2 ** (exponent - bias)) ).cast(dtypes.float32)
-		
-		value = (exponent == 0).where(
-			(mantissa / 8) * (2 ** (1 - bias)),
-			value
-		)
-		
-		value = ( (exponent == 0xF) * (mantissa != 0) ).where(np.nan, value)
-		value = ( (exponent == 0xF) * (mantissa == 0) ).where(np.inf, value)
-		value = value*( (-1)**sign.cast(dtypes.float32))
-		return value
+		return convert_fp8e4m3(fp8_tensor, dtype)
 		
 	elif fp8_tensor.dtype == tinygrad.dtypes.fp8e5m2:
-		sign = ((fp8_np >> 7) & 0x1).cast(dtypes.float32)
-		exponent = ((fp8_np >> 2) & 0x1F).cast(dtypes.float32)
-		mantissa = (fp8_np & 0x3).cast(dtypes.float32)
-		bias = 15
-		
-		# start with the default
-		value = ( (1 + mantissa / 4.0) * (2 ** (exponent - bias)) ).astype(np.float32)
-		
-		# subnormals
-		value = (exponent == 0).where(
-			(mantissa / 4) * (2 ** (1 - bias)),
-			value
-		)
-		
-		value = ( (exponent == 0x1F) * (mantissa != 0) ).where(np.nan, value)
-		value = ( (exponent == 0x1F) * (mantissa == 0) ).where(np.inf, value)
-		value = value*( (-1)**sign.cast(dtypes.float32))
-	else:
-		raise ValueError
-	return value.cast(dtype).reshape(fp8_tensor.shape)
+		return convert_fp8e5m2(fp8_tensor, dtype)
 	
 def convert_bfloat16(bf16_tensor, dtype):
 	bias = 15

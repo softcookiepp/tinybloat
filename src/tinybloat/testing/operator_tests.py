@@ -290,16 +290,16 @@ def test_convert_fp8_safely():
 	
 	# first do it with e4m3
 	ttorch = torch.frombuffer(test_b_array, dtype = torch.float8_e4m3fn)
-	ttiny = tinygrad.Tensor(test_b, dtype = tinygrad.dtypes.fp8e4m3)
+	ttiny = tinygrad.Tensor(test_b, dtype = tinygrad.dtypes.uint8)
 	ttorch = ttorch.to(torch.float32)
-	ttiny = tinybloat.safety_functions.cast(ttiny, tinygrad.dtypes.float32)
+	ttiny = tinybloat.compatibility.convert_fp8e4m3(ttiny, tinygrad.dtypes.float32)
 	assert mse(ttorch.numpy(), ttiny.numpy() ) == 0.0
 	
 	# then with e5m2
 	ttorch = torch.frombuffer(test_b_array, dtype = torch.float8_e5m2)
-	ttiny = tinygrad.Tensor(test_b, dtype = tinygrad.dtypes.fp8e5m2)
+	ttiny = tinygrad.Tensor(test_b, dtype = tinygrad.dtypes.uint8)
 	ttorch = ttorch.to(torch.float32)
-	ttiny = tinybloat.safety_functions.cast(ttiny, tinygrad.dtypes.float32)
+	ttiny = tinybloat.compatibility.convert_fp8e5m2(ttiny, tinygrad.dtypes.float32)
 	assert mse(ttorch.numpy(), ttiny.numpy() ) == 0.0
 	
 def test_device_supports_dtype():
