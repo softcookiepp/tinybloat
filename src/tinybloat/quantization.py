@@ -210,9 +210,7 @@ class QTensor:
 				d = (d * sc.cast(dtypes.float32)).reshape(n_blocks, -1, 1)
 				dm = (dmin * m.cast(dtypes.float32)).reshape(n_blocks, -1, 1)
 
-				#ql = qs.reshape(n_blocks, -1, 1, 32) >> np.array([0, 4], dtype=np.uint8).reshape(1, 1, 2, 1)
 				ql = broadcast_rshift(qs.reshape(n_blocks, -1, 1, 32), [0, 4], 2)
-				#qh = qh.reshape((n_blocks, -1, 1, 32)) >> np.array([i for i in range(8)], dtype=np.uint8).reshape((1, 1, 8, 1))
 				qh = broadcast_rshift(qh.reshape(n_blocks, -1, 1, 32), np.arange(8), 2)
 				ql = (ql & 0x0F).reshape(n_blocks, -1, 32)
 				qh = (qh & 0x01).reshape(n_blocks, -1, 32)

@@ -128,89 +128,26 @@ def get_device_uint_bounds(device: str):
 	return _get_device_type_group_bounds(device, tinygrad.dtypes.sints)
 	
 def convert_fp16(fp16_tensor, dtype):
-	if False:
-		bias = 15
-		conversion_ratio = 8192
-		
-		val = fp16_tensor.bitcast(dtypes.uint16)
-		sign = (val >> 15) & 0b0000000000000001
-		sign32 = sign.cast(dtypes.uint) << 31
-		exponent = ((val >> 10) & 0b0000000000011111)
-		exponent32 = ( exponent.cast(dtypes.uint) + (127 - bias) ) << 23
-		mantissa = (val & 0b0000001111111111)
-		#0b000000000000000000001111111111
-		mantissa32 = mantissa.cast(dtypes.uint) << 12
-		
-		value = ( (sign32 | exponent32) | mantissa32)
-		# pretty sure this can handle any subnormality?
-		
-		value = (exponent == 0xFFF).where(np.nan, value)
-		value = ((exponent == 0xFFF) & (mantissa == 0) ).where(np.inf, value)
-		return value
-		
-	elif True:
-		bias = 15
-		val = fp16_tensor.bitcast(dtypes.uint16)
-		sign = ((val >> 15) & 0b0000000000000001).cast(dtypes.float)
-		exponent = ((val >> 10) & 0b0000000000011111).cast(dtypes.float)
-		mantissa = (val & 0b0000001111111111).cast(dtypes.float)
-		
-		# start with the default
-		value = ( (1 + (mantissa/1024) ) * (2 ** (exponent - bias)) ).cast(dtypes.float)
-		
-		value = (exponent == 0).where(
-			(mantissa / 1024) * (2 ** (-14)),
-			value
-		)
-		
-		
-		value = ( (exponent == 0b11111) * (mantissa != 0) ).where(np.nan, value)
-		value = ( (exponent == 0b11111) * (mantissa == 0) ).where(np.inf, value)
-		value = value*( (-1)**sign.cast(dtypes.float32))
-		return value
-	else:
-		# Ensure input is float16
-		u16 = fp16_tensor.bitcast(dtypes.uint16)
-
-		# Extract float16 fields
-		sign = (u16 >> 15) & 0x1
-		exp  = (u16 >> 10) & 0x1F
-		mant = u16 & 0x3FF
-
-		# Prepare float32 components
-		sign32 = sign.cast(dtypes.uint32) << 31
-
-		# Compute exponent: normalized, zero, subnormal, inf, nan
-		exp32 = exp.zeros_like().cast(dtypes.uint)
-		mant32 = mant.zeros_like().cast(dtypes.uint)
-
-		# Normalized numbers
-		norm = (exp > 0) & (exp < 31)
-		exp32[norm] = (exp[norm] + (127 - 15)) << 23
-		mant32[norm] = (mant[norm]) << 13
-
-		# Zero and subnormals (exp == 0)
-		subnorm = (exp == 0)
-		if np.any(subnorm):
-			# Shift mantissa until leading 1 is just left of the decimal point
-			mant_sub = mant[subnorm]
-			shift = (mant_sub != 0).astype(np.uint32)
-			while np.any((mant_sub & 0x400) == 0):
-				mant_sub <<= 1
-				shift += 1
-			mant32[subnorm] = (mant_sub & 0x3FF) << 13
-			exp32[subnorm] = ((127 - 15 - shift) << 23)
-
-		# Inf/NaN (exp == 31)
-		infnan = (exp == 31)
-		exp32[infnan] = 0xFF << 23
-		mant32[infnan] = mant[infnan] << 13
-
-		# Combine into float32 bits
-		u32 = sign32 | exp32 | mant32
-		out = u32.view(np.float32)
-		return out
+	bias = 15
+	val = fp16_tensor.bitcast(dtypes.uint16)
+	sign = ((val >> 15) & 0b0000000000000001).cast(dtypes.float)
+	exponent = ((val >> 10) & 0b0000000000011111).cast(dtypes.float)
+	mantissa = (val & 0b0000001111111111).cast(dtypes.float)
 	
+	# start with the default
+	value = ( (1 + (mantissa/1024) ) * (2 ** (exponent - bias)) ).cast(dtypes.float)
+	
+	value = (exponent == 0).where(
+		(mantissa / 1024) * (2 ** (-14)),
+		value
+	)
+	
+	
+	value = ( (exponent == 0b11111) * (mantissa != 0) ).where(np.nan, value)
+	value = ( (exponent == 0b11111) * (mantissa == 0) ).where(np.inf, value)
+	value = value*( (-1)**sign.cast(dtypes.float32))
+	return value
+
 def convert_fp8(fp8_tensor, dtype):
 	"""
 	Convert a fp8 tensor to another dtype even if no backends on system support it
