@@ -11,14 +11,14 @@ class ComplexTensor:
 	"""
 	def __init__(self,
 				real: Union[tinygrad.Tensor, np.ndarray],
-				imag: Optional[Union[tinygrad.Tensor, np.ndarray]] = None, device = None):
+				imag: Optional[Union[tinygrad.Tensor, np.ndarray]] = None, device = None, requires_grad = None):
 		if isinstance(real, np.ndarray):
 			if np.iscomplexobj(real):
 				real, imag = real.real, real.imag
-				imag = tinygrad.Tensor(imag, device = device)
-			real = tinygrad.Tensor(real, device = device)
+				imag = tinygrad.Tensor(imag, device = device, requires_grad = requires_grad)
+			real = tinygrad.Tensor(real, device = device, requires_grad = requires_grad)
 			if isinstance(imag, np.ndarray):
-				imag = tinygrad.Tensor(imag, device = device)
+				imag = tinygrad.Tensor(imag, device = device, requires_grad = requires_grad)
 		
 		if imag is None:
 			imag = real.zeros_like()

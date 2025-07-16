@@ -63,6 +63,21 @@ def test_convert_fp16():
 				# inf
 				assert np.isinf(np.sum(out.numpy() ) )
 
+def test_tensor_constructor():
+	from tinygrad import dtypes, Tensor
+	_test_dtypes = [
+		(torch.float, dtypes.float),
+		(torch.float16, dtypes.half),
+		#(torch.bfloat16, dtypes.bfloat16),
+		#(torch.float8_e4m3fn, dtypes.fp8e4m3),
+		#(torch.float8_e5m2, dtypes.fp8e5m2)
+	]
+	
+	for torch_dt, tiny_dt in _test_dtypes:
+		torch_tensor = torch.arange(16).to(torch.int32).view(torch_dt)
+		tiny_tensor = tinybloat.tensor(np.arange(16).astype(np.int32), initial_dtype = tiny_dt)
+		error = mse(torch_tensor.to(torch.float).numpy(), tiny_tensor.cast(dtypes.float).numpy() )
+		assert error < 1.0e-4, f"error too large for {tiny_dt}: {error}"
 
 def test_dequantize():
 	for method in ["Q2_K", "Q3_K_L", "Q3_K_M", "Q3_K_S", "Q4_0", "Q6_K"]:
@@ -80,3 +95,5 @@ def test_dequantize():
 			qt = tinybloat.quantization.QTensor(quantized, tensor.tensor_type)
 			error = mse(qt.dequantize().numpy(), out)
 			assert error < 5.0e-3, f"error too high: {error}"
+
+

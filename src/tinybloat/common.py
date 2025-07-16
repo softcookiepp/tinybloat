@@ -3,10 +3,17 @@ from tinygrad.device import is_dtype_supported
 import numpy as np
 from .safety_functions import cast
 from typing import Union, Optional, Tuple, Iterable
+from tinygrad.dtype import _from_np_dtype, _to_np_dtype
+
 from .complex_tensor import ComplexTensor
+
+# we may need this
+import gguf
+
 from . import compatibility
 import inspect
 import os
+
 
 def is_jitted():
 	for item in inspect.stack():
@@ -370,3 +377,35 @@ def broadcast_lshift(tensor, shifts, dim):
 	
 def broadcast_rshift(tensor, shifts, dim):
 	return _broadcast_shift(tensor, shifts, dim, True)
+
+def tensor(data, device = None, dtype = None, requires_grad = None, initial_dtype = None):
+	"""
+	Constructs either a tinygrad tensor or complex tensor from input.
+	Handles all quantization/dequantization implicitly
+	"""
+	from .quantization import QTensor
+	if device is None:
+		if isinstance(data, tinygrad.Tensor):
+			device = data.device
+		else:
+			device = tinygrad.Device.DEFAULT
+	
+	# First, we need to extract the initial dtype.
+	# If supplied, the underlying data array is treated as the dtype
+	if initial_dtype is None:
+		if isinstance(data, tinygrad.Tensor):
+			initial_dtype = data.dtype
+		elif isinstance(data, np.ndarray):
+			initial_dtype = _from_np_dtype(data.dtype)
+	
+	if dtype is None:
+		dtype = initial_dtype
+			
+	# determine if the array is complex
+	if isinstance(data, np.ndarray):
+		if np.iscomplexobj(data):
+			# just return complex tensor
+			return ComplexTensor(data, device = device, requires_grad = requires_grad)
+	
+	# now im pretty sure we can just pass it to QTensor immediately if we get this far
+	return QTensor(data, initial_dtype, device = device, requires_grad = requires_grad).dequantize()

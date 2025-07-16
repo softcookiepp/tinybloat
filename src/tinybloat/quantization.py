@@ -48,26 +48,41 @@ class QTensor:
 	def __init__(self,
 				value: Union[tinygrad.Tensor, np.ndarray, list, tuple],
 				qtype,
-				device = None):
+				device = None,
+				requires_grad = None):
+		
+		self._dequantized = None
 		
 		if device is None:
-			device = tinygrad.Device.DEFAULT
-		
-		if not isinstance(qtype, GGMLQuantizationType):
-			# Only GGUF/GGML types are supported for now
-			raise NotImplementedError
-		
-		self._block_size, self._type_size = GGML_QUANT_SIZES[qtype]
-		self._qtype = qtype
+			if isinstance(value, Tensor):
+				device = value.device
+			else:
+				device = tinygrad.Device.DEFAULT
 		
 		if isinstance(value, np.ndarray):
-			value = tinygrad.Tensor(value, device = device)
+			value = tinygrad.Tensor(value, device = device, requires_grad = requires_grad)
 		elif not isinstance(value, tinygrad.Tensor):
 			# TODO: examine dtype?
-			value = tinygrad.Tensor(np.array(value), device = device)
+			value = tinygrad.Tensor(np.array(value), device = device, requires_grad = requires_grad)
 		assert isinstance(value, tinygrad.Tensor)
+		
+		if qtype is None:
+			# just set it as dtype
+			qtype = value.dtype
+		self._qtype = qtype
+		if isinstance(qtype, GGMLQuantizationType):
+			self._block_size, self._type_size = GGML_QUANT_SIZES[qtype]
+		elif isinstance(qtype, tinygrad.dtype.DType):
+			if not device_supports_dtype(device, qtype):
+				# TODO: implement software-level dequantization of regular tinygrad types
+				value = value.bitcast(dtypes.uint8)
+			else:
+				# just set dequantized as 
+				self._dequantized = value.bitcast(qtype)
+		else:
+			# Only GGUF/GGML types and tinygrad dtypes are supported for now
+			raise NotImplementedError
 		self._tg = value
-		self._dequantized = None
 	
 	def dequantize(self):
 		"""
@@ -77,16 +92,19 @@ class QTensor:
 		if not self._dequantized is None:
 			return self._dequantized
 		
-		if self._qtype == GGMLQuantizationType.F32:
+		elif self._qtype == GGMLQuantizationType.F32 or self._qtype == dtypes.float:
 			return self._tg.bitcast(dtypes.float)
-		elif self._qtype == GGMLQuantizationType.F16:
+		elif self._qtype == GGMLQuantizationType.F16 or self._qtype == dtypes.half:
 			if device_supports_dtype(self._tg.device, dtypes.half):
 				return self._tg.bitcast(dtypes.half)
 			else:
 				self._dequantized = convert_fp16(self._tg, dtypes.float)
-				
 		
-		else:
+		elif self._qtype in dtypes.fp8s:
+			# TODO: figure out this crap
+			raise NotImplementedError
+		
+		elif isinstance(self._qtype, GGMLQuantizationType):
 			# for GGUF types
 			blocks = self._tg.bitcast(dtypes.uint8)
 			shape = blocks.shape
@@ -250,27 +268,30 @@ class QTensor:
 			
 			# reshape into proper tensor shape
 			self._dequantized = blocks.reshape(*quant_shape_from_byte_shape(shape, self._qtype) )
+		
+		else:
+			raise NotImplementedError(f"Dequantization not implemented for {self._qtype}")
 		assert not self._dequantized is None
 		return self._dequantized
 		
-		def __getattr__(self, attr):
-			"""
-			@public
-			Provides a wrapper that allows
-			```
-			self.attribute
-			```
-			
-			to be treated as
-			
-			```
-			self.dequantize().attribute
-			```
-			"""
-			if hasattr(self._tg, attr):
-				return getattr(self.dequantize(), attr)
-			else:
-				raise AttributeError
+	def __getattr__(self, attr):
+		"""
+		@public
+		Provides a wrapper that allows
+		```
+		self.attribute
+		```
+		
+		to be treated as
+		
+		```
+		self.dequantize().attribute
+		```
+		"""
+		if hasattr(self._tg, attr):
+			return getattr(self.dequantize(), attr)
+		else:
+			raise AttributeError
 	
 
 def _get_ggml_qtype_name(qtype):
