@@ -46,7 +46,7 @@ class QTensor:
 	in the future.
 	"""
 	def __init__(self,
-				value: Union[tinygrad.Tensor, np.ndarray, list, tuple],
+				value: Union[tinygrad.Tensor, np.ndarray, list, tuple, gguf.gguf_reader.ReaderTensor],
 				qtype,
 				device = None,
 				requires_grad = None):
@@ -61,6 +61,10 @@ class QTensor:
 		
 		if isinstance(value, np.ndarray):
 			value = tinygrad.Tensor(value, device = device, requires_grad = requires_grad)
+		elif isinstance(value, gguf.gguf_reader.ReaderTensor):
+			qtype = value.tensor_type
+			value = tinygrad.Tensor(np.array(value.data), device = device, requires_grad = requires_grad)
+			
 		elif not isinstance(value, tinygrad.Tensor):
 			# TODO: examine dtype?
 			value = tinygrad.Tensor(np.array(value), device = device, requires_grad = requires_grad)
@@ -90,7 +94,7 @@ class QTensor:
 		"""
 		# just to make things easier...
 		if not self._dequantized is None:
-			return self._dequantized
+			return self._dequantized	
 		
 		elif self._qtype == GGMLQuantizationType.F32 or self._qtype == dtypes.float:
 			self._dequantized = self._tg.bitcast(dtypes.float)

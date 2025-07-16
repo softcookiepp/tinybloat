@@ -86,14 +86,14 @@ def test_dequantize():
 		for tensor in reader.tensors:
 			out = gguf.dequantize(tensor.data, tensor.tensor_type)
 			
-			quantized = tinygrad.Tensor(np.array(tensor.data) )
-			
 			# just make sure it actually loads the tensor correctly
+			quantized = tinygrad.Tensor(np.array(tensor.data) )
 			assert mse(quantized.numpy(), tensor.data) < 1.0e-4
 			assert mse(np.array(quantized.shape), np.array(tensor.data.shape) ) < 1.0e-4
 			
-			qt = tinybloat.quantization.QTensor(quantized, tensor.tensor_type)
-			error = mse(qt.dequantize().numpy(), out)
-			assert error < 5.0e-3, f"error too high: {error}"
+			# just load it into dequantized form directly via tinybloat.tensor
+			dqt = tinybloat.tensor(tensor)
+			error = mse(dqt.numpy(), out)
+			assert error < 5.0e-5, f"error too high: {error}"
 
 
