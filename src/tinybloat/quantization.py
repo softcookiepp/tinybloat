@@ -6,7 +6,7 @@ import gguf
 from gguf.constants import GGMLQuantizationType, GGML_QUANT_SIZES, QK_K
 from gguf.quants import quant_shape_to_byte_shape, quant_shape_from_byte_shape
 from .common import hsplit, broadcast_lshift, broadcast_rshift
-from .compatibility import device_supports_dtype, convert_fp16
+from .compatibility import device_supports_dtype, convert_fp16, convert_bfloat16, convert_fp8e4m3, convert_fp8e5m2
 
 
 def _get_scale_min(scales: tinygrad.Tensor):
@@ -93,16 +93,21 @@ class QTensor:
 			return self._dequantized
 		
 		elif self._qtype == GGMLQuantizationType.F32 or self._qtype == dtypes.float:
-			return self._tg.bitcast(dtypes.float)
+			self._dequantized = self._tg.bitcast(dtypes.float)
 		elif self._qtype == GGMLQuantizationType.F16 or self._qtype == dtypes.half:
 			if device_supports_dtype(self._tg.device, dtypes.half):
-				return self._tg.bitcast(dtypes.half)
+				self._dequantized = self._tg.bitcast(dtypes.half)
 			else:
 				self._dequantized = convert_fp16(self._tg, dtypes.float)
 		
-		elif self._qtype in dtypes.fp8s:
-			# TODO: figure out this crap
-			raise NotImplementedError
+		elif self._qtype == GGMLQuantizationType.BF16 or self._qtype == dtypes.bfloat16:
+			self._dequantized = convert_bfloat16(self._tg, dtypes.float)
+		
+		elif self._qtype == dtypes.fp8e4m3:
+			self._dequantized = convert_fp8e4m3(self._tg, dtypes.float)
+		elif self._qtype == dtypes.fp8e5m2:
+			self._dequantized = convert_fp8e5m2(self._tg, dtypes.float)
+		
 		
 		elif isinstance(self._qtype, GGMLQuantizationType):
 			# for GGUF types

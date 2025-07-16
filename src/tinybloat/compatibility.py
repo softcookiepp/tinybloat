@@ -198,23 +198,21 @@ def convert_fp8(fp8_tensor, dtype):
 		return convert_fp8e5m2(fp8_tensor, dtype)
 	
 def convert_bfloat16(bf16_tensor, dtype):
-	bias = 15
-	val = fp16_tensor.bitcast(dtypes.uint16)
+	bias = 127
+	val = bf16_tensor.bitcast(dtypes.uint16)
 	sign = ((val >> 15) & 0b0000000000000001).cast(dtypes.float)
-	exponent = ((val >> 10) & 0b0000000000011111).cast(dtypes.float)
-	mantissa = (val & 0b0000001111111111).cast(dtypes.float)
+	exponent = ((val >> 7) & 0b0000000011111111).cast(dtypes.float)
+	mantissa = (val & 0b0000000001111111).cast(dtypes.float)
 	
 	# start with the default
-	value = ( (1 + (mantissa/1024) ) * (2 ** (exponent - bias)) ).cast(dtypes.float)
+	value = ( (1 + (mantissa/128) ) * (2 ** (exponent - bias)) ).cast(dtypes.float)
 	
 	value = (exponent == 0).where(
-		(mantissa / 1024) * (2 ** (-14)),
+		(mantissa / 128) * (2 ** (-126)),
 		value
 	)
 	
 	
-	value = ( (exponent == 0b11111) * (mantissa != 0) ).where(np.nan, value)
-	value = ( (exponent == 0b11111) * (mantissa == 0) ).where(np.inf, value)
-	value = value*( (-1)**sign.cast(dtypes.float32))
-	return value
-	raise NotImplementedError
+	value = ( (exponent == 0xFF) * (mantissa != 0) ).where(np.nan, value)
+	value = ( (exponent == 0xFF) * (mantissa == 0) ).where(np.inf, value)
+	return ( value*( (-1)**sign.cast(dtypes.float32)) ).cast(dtype)
