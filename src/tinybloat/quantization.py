@@ -87,6 +87,11 @@ class QTensor:
 			# Only GGUF/GGML types and tinygrad dtypes are supported for now
 			raise NotImplementedError
 		self._tg = value
+		
+	def to(self, device: str):
+		# we don't want to dequantize before moving to a different device.
+		# so we must lay this over
+		raise NotImplemented
 	
 	def dequantize(self):
 		"""
