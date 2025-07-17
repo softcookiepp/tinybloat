@@ -29,6 +29,15 @@ class ComplexTensor:
 		self._real = real
 		self._imag = imag
 		assert self._real.device == self._imag.device
+		
+	def as_np_layout(self):
+		# converts the tensor to that of numpy's complex data types)
+		# i and j in complex arrays are right next to each other.
+		# because of this, all we have to do is reshape them and concat at last dimension.
+		# that way we will have the same memory layout as numpy's complex data types
+		real_rs = self._real.reshape(self._real.shape, 1)
+		imag_rs = self._imag.reshape(self._imag.shape, 1)
+		return real_rs.cat(imag_rs, dim = -1).contiguous()
 	
 	@property
 	def real(self) -> tinygrad.Tensor:

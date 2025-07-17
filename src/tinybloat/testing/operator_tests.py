@@ -334,3 +334,19 @@ def test_hsplit():
 	a_t = tinygrad.Tensor(a)
 	for np_elem, tg_elem in zip(np.hsplit(a, [2]), tinybloat.hsplit(a_t, [2]) ):
 		assert mse(np_elem, tg_elem.numpy() ) < 1.0e-4
+		
+def test_array_split():
+	np_a = np.arange(8*3).reshape(3, 8).astype(np.float32)
+	tg_a = tinygrad.Tensor(np_a)
+	for d in range(2):
+		np_segments = np.array_split(np_a, 5, d)
+		tg_segments = tinybloat.array_split(tg_a, 5, d)
+		print("segments:", len(np_segments), len(tg_segments) )
+		assert len(np_segments) == len(tg_segments)
+		for nps, tgs in zip(np_segments, tg_segments):
+			print(nps)
+			print(tgs.numpy() )
+			assert nps.size == tgs.numel()
+			if nps.size > 0:
+				error = mse(nps, tgs.numpy() )
+				assert error <= 1.0e-7, "Something wrong"

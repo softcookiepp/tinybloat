@@ -395,7 +395,7 @@ def tensor(data, device = None, dtype = None, requires_grad = None, initial_dtyp
 	if initial_dtype is None:
 		if isinstance(data, tinygrad.Tensor):
 			initial_dtype = data.dtype
-		elif isinstance(data, np.ndarray):
+		elif isinstance(data, np.ndarray) and (not np.iscomplexobj(data) ):
 			initial_dtype = _from_np_dtype(data.dtype)
 	
 	if dtype is None:
@@ -409,3 +409,32 @@ def tensor(data, device = None, dtype = None, requires_grad = None, initial_dtyp
 	
 	# now im pretty sure we can just pass it to QTensor immediately if we get this far
 	return QTensor(data, initial_dtype, device = device, requires_grad = requires_grad).dequantize()
+
+def array_split(arr, indices_or_sections, dim = 0):
+	"""
+	Reimplementation of numpy's array_split function: https://numpy.org/doc/stable/reference/generated/numpy.array_split.html
+	"""
+	if not isinstance(indices_or_sections, int):
+		raise NotImplementedError
+	else:
+		# get slices
+		slices = []
+		for d in range(len(arr.shape) ):
+			slices.append(slice(None, None, None) )
+		
+		n = indices_or_sections
+		I = arr.shape[dim]
+		num_size_1 = I % n
+		size_1 = (I // n) + 1
+		num_size_2 = n - num_size_1
+		size_2 = I // n
+		
+		current_offset = 0
+		segments = []
+		for s, ns in zip( (size_1, size_2), (num_size_1, num_size_2) ):
+			for i in range(ns):
+				new_offset = current_offset + s
+				slices[dim] = slice(current_offset, new_offset, None)
+				segments.append(arr.__getitem__(slices) )
+				current_offset = new_offset
+		return segments
