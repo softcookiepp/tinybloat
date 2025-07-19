@@ -438,3 +438,9 @@ def array_split(arr, indices_or_sections, dim = 0):
 				segments.append(arr.__getitem__(slices) )
 				current_offset = new_offset
 		return segments
+
+def polar(abs_, angle):
+	"""
+	See https://docs.pytorch.org/docs/stable/generated/torch.polar.html
+	"""
+	return ComplexTensor(abs_ * angle.cos(), abs_ * angle.sin() )
