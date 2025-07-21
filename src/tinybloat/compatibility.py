@@ -77,6 +77,9 @@ def _test_dtype(dtype, device):
 			return True
 		except (tinygrad.device.CompileError, subprocess.CalledProcessError, KeyError) as e:
 			return False
+		except:
+			# hack for DAWN backend
+			return False
 	return False
 
 def _probe_tg_dtypes(tg_device: str):

@@ -49,7 +49,9 @@ class QTensor:
 				value: Union[tinygrad.Tensor, np.ndarray, list, tuple, gguf.gguf_reader.ReaderTensor],
 				qtype,
 				device = None,
-				requires_grad = None):
+				requires_grad = None,
+				value_quantized = True
+				):
 		
 		self._dequantized = None
 		
@@ -81,8 +83,11 @@ class QTensor:
 				# TODO: implement software-level dequantization of regular tinygrad types
 				value = value.bitcast(dtypes.uint8)
 			else:
-				# just set dequantized as 
-				self._dequantized = value.bitcast(qtype)
+				# just set dequantized as
+				if value_quantized:
+					self._dequantized = value.bitcast(qtype)
+				else:
+					raise NotImplementedError
 		else:
 			# Only GGUF/GGML types and tinygrad dtypes are supported for now
 			raise NotImplementedError
