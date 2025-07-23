@@ -27,7 +27,9 @@ dependencies = [
 	"argparse",
 	"pytest>=8.4.0",
 	"pdoc",
-	"gguf"
+	"gguf",
+	"gadget-ml",
+	"safetensors"
 ]
 description = "Extended functionality for tinygrad"
 version = "0.0.3"
