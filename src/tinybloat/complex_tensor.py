@@ -123,7 +123,7 @@ class ComplexTensor:
 		return self
 		
 	def split(self, *args, **kwargs):
-		return ComplexTensor(self._real.split(*args, **kwargs), self._complex.split(*args, **kwargs), requires_grad = self._real.requires_grad)
+		return ComplexTensor(self._real.split(*args, **kwargs), self._imag.split(*args, **kwargs), requires_grad = self._real.requires_grad)
 
 	def _tg_override(self, *args, **kwargs):
 		# Method for automatically wrapping stuff coded in tinygrad so
