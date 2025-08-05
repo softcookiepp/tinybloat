@@ -108,11 +108,12 @@ def device_supports_dtype(device: str, dtype):
 	
 def _get_device_type_group_bounds(device: str, dt_list):
 	low = None
+	assert len(dt_list) > 0
 	for dt in sorted(dt_list, key = lambda x: x.itemsize):
 		if device_supports_dtype(device, dt):
 			low = dt
 			break
-	assert not low is None
+	assert not low is None, f"low not found in {dt_list}"
 	high = None
 	for dt in sorted(dt_list, key = lambda x: -1*x.itemsize):
 		if device_supports_dtype(device, dt):
