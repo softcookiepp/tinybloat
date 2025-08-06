@@ -5,6 +5,7 @@ import numpy as np
 from typing import Union, Optional, Tuple
 import subprocess
 import itertools
+import wgpu
 
 _longlong_support_status = {}
 
@@ -77,7 +78,7 @@ def _test_dtype(dtype, device):
 			a = (tinygrad.Tensor.randn(4, dtype = dtype, device = device).bitcast(dtype).sin() ).realize().numpy()
 			print("success!")
 			return True
-		except (tinygrad.device.CompileError, subprocess.CalledProcessError, KeyError, RuntimeError) as e:
+		except (tinygrad.device.CompileError, subprocess.CalledProcessError, KeyError, RuntimeError, wgpu._classes.GPUValidationError) as e:
 			print("error!")
 			return False
 	return False
