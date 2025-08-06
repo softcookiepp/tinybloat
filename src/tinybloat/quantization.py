@@ -121,6 +121,10 @@ class QTensor:
 			self._dequantized = convert_fp8e4m3(self._tg, dtypes.float)
 		elif self._qtype == dtypes.fp8e5m2:
 			self._dequantized = convert_fp8e5m2(self._tg, dtypes.float)
+		elif self._qtype == dtypes.long:
+			raise NotImplementedError
+		elif self._qtype == dtypes.long:
+			raise NotImplementedError
 		
 		
 		elif isinstance(self._qtype, GGMLQuantizationType):

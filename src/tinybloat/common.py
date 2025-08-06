@@ -383,7 +383,8 @@ def tensor(data, device = None, dtype = None, requires_grad = None, initial_dtyp
 	Constructs either a tinygrad tensor or complex tensor from input.
 	Handles all quantization/dequantization implicitly
 	"""
-	from .quantization import QTensor
+	from .quantization import QTensor, dequantize
+	from .compatibility import device_supports_dtype
 	if device is None:
 		if isinstance(data, tinygrad.Tensor):
 			device = data.device
