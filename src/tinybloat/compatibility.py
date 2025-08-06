@@ -78,6 +78,7 @@ def _test_dtype(dtype, device):
 			print("success!")
 			return True
 		except (tinygrad.device.CompileError, subprocess.CalledProcessError, KeyError, RuntimeError) as e:
+			input("error!")
 			return False
 	return False
 
