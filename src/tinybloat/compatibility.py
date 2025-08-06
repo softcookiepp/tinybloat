@@ -76,7 +76,7 @@ def _test_dtype(dtype, device):
 			print("testing dtype:", dtype)
 			a = (tinygrad.Tensor.randn(4, dtype = dtype, device = device).bitcast(dtype).sin() ).realize().numpy()
 			return True
-		except (tinygrad.device.CompileError, subprocess.CalledProcessError, KeyError) as e:
+		except (tinygrad.device.CompileError, subprocess.CalledProcessError, KeyError, RuntimeError) as e:
 			return False
 	return False
 
