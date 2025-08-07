@@ -247,7 +247,7 @@ def nonzero(inp, as_tuple = False):
 	out_to_cat = []
 	for idx_a in out:
 		out_to_cat.append(idx_a.reshape(-1, 1) )
-	return tinygrad.Tensor(np.concatenate(out_to_cat, axis = 1), device = inp.device)
+	return tensor(np.concatenate(out_to_cat, axis = 1).astype(np.int32), device = inp.device, requires_grad = inp.requires_grad)
 	
 	
 def cat(tensors, dim = 0):

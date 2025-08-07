@@ -123,7 +123,7 @@ class QTensor:
 			self._dequantized = convert_fp8e5m2(self._tg, dtypes.float)
 		elif self._qtype == dtypes.long:
 			raise NotImplementedError
-		elif self._qtype == dtypes.long:
+		elif self._qtype == dtypes.ulong:
 			raise NotImplementedError
 		
 		
