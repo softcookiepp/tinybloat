@@ -223,7 +223,7 @@ def limit_uint_precision(obj,
 
 def cast_to_supported_and_move_(obj, new_device: Optional[str] = None):
 	"""
-	Cast all parameters/tensors of a model or tensor to dtypes supported by new_device, and 
+	Cast all parameters/tensors of a model or tensor to dtypes supported by new_device, and move to the new device
 	"""
 	if new_device is None:
 		new_device = tinygrad.Device.DEFAULT
@@ -236,6 +236,10 @@ def cast_to_supported_and_move_(obj, new_device: Optional[str] = None):
 	obj = limit_sint_precision(obj, low_sint, high_sint, new_device)
 	obj = limit_uint_precision(obj, low_uint, high_uint, new_device)
 	return obj
+	
+def to(t, device: str):
+	t = t.clone()
+	return cast_to_supported_and_move_(t, device)
 
 def nonzero(inp, as_tuple = False):
 	# It is going to be very difficult to write this function
