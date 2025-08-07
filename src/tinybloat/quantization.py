@@ -84,7 +84,7 @@ class QTensor:
 		elif isinstance(qtype, tinygrad.dtype.DType):
 			if not device_supports_dtype(device, qtype):
 				# TODO: implement software-level dequantization of regular tinygrad types
-				value = value.bitcast(dtypes.uint8).realize()
+				value = value.bitcast(dtypes.uint8)
 			else:
 				# just set dequantized as
 				if value_quantized:
@@ -125,8 +125,10 @@ class QTensor:
 		elif self._qtype == dtypes.fp8e5m2:
 			self._dequantized = convert_fp8e5m2(self._tg, dtypes.float)
 		elif self._qtype == dtypes.long:
+			raise NotImplementedError
 			self._dequantized = self._tg.bitcast(dtypes.int).reshape(-1, 2)[:, 0].reshape(*self._init_shape)
 		elif self._qtype == dtypes.ulong:
+			raise NotImplementedError
 			self._dequantized = self._tg.bitcast(dtypes.uint).reshape(-1, 2)[:, 0].reshape(*self._init_shape)
 		
 		
