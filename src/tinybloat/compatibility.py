@@ -107,6 +107,13 @@ def device_supports_dtype(device: str, dtype):
 	_dtype_table[device] = _probe_tg_dtypes(device)[0]
 	return dtype in _dtype_table[device]
 	
+def highest_precision_int(dev: str):
+	dev = dev.split(":")[0]
+	for dt in [tinygrad.dtypes.int64, tinygrad.dtypes.int32, tinygrad.dtypes.int16, tinygrad.dtypes.int8]:
+		if is_dtype_supported(dev, dt):
+			return dt
+	raise ValueError
+	
 def _get_device_type_group_bounds(device: str, dt_list):
 	low = None
 	assert len(dt_list) > 0
