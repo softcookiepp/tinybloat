@@ -110,7 +110,7 @@ def device_supports_dtype(device: str, dtype):
 def highest_precision_int(dev: str):
 	dev = dev.split(":")[0]
 	for dt in [tinygrad.dtypes.int64, tinygrad.dtypes.int32, tinygrad.dtypes.int16, tinygrad.dtypes.int8]:
-		if is_dtype_supported(dev, dt):
+		if device_supports_dtype(dev, dt):
 			return dt
 	raise ValueError
 	
