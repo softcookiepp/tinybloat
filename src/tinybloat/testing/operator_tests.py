@@ -331,7 +331,7 @@ def test_isin():
 	
 def test_hsplit():
 	a = np.arange(8*3).reshape(3, 8)
-	a_t = tinygrad.Tensor(a)
+	a_t = tinybloat.tensor(a)
 	for np_elem, tg_elem in zip(np.hsplit(a, [2]), tinybloat.hsplit(a_t, [2]) ):
 		assert mse(np_elem, tg_elem.numpy() ) < 1.0e-4
 		
