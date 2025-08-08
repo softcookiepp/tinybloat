@@ -243,13 +243,10 @@ def cast_to_supported_and_move_(obj, new_device: Optional[str] = None):
 	return obj
 	
 def to(t, device: str):
-	return move_to_device(t, device)
 	old_device = t.device
 	t = t.clone()
 	new_t = cast_to_supported_and_move_(t, device)
-	print(t.device, new_t.device, device)
-	assert old_device != t.device
-	return t
+	return t.to(device)
 
 def nonzero(inp, as_tuple = False):
 	# It is going to be very difficult to write this function
