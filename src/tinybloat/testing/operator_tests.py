@@ -350,3 +350,13 @@ def test_array_split():
 			if nps.size > 0:
 				error = mse(nps, tgs.numpy() )
 				assert error <= 1.0e-7, "Something wrong"
+
+def test_to():
+	if tinygrad.Device.DEFAULT == "CPU":
+		# don't bother testing, there may not be a device present that can be tested against
+		assert False, "Cannot run test while tinygrad.Device.DEFAULT is CPU"
+		
+	np_a = np.random.randn(16).astype(np.float32)
+	tg_a_cpu = tinygrad.Tensor(np_a, device = "CPU").realize()
+	tg_a_dev = tinybloat.to(tg_a_cpu, tinygrad.Device.DEFAULT).realize()
+	assert tg_a_cpu.device != tg_a_dev.device

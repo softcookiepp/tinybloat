@@ -123,6 +123,15 @@ def replace_dtype(obj, to_replace, replace_with):
 		if v.dtype == to_replace:
 			v.replace( v.to("CPU").cast(replace_with).to(v.device) )
 	return obj
+	
+def _limit_tensor_precision(t,
+			low: Union[tinygrad.dtype.DType, None],
+			high: Union[tinygrad.dtype.DType, None],
+			new_device,
+			dtype_list,
+			dtype_eval_function
+		):
+	raise NotImplementedError
 
 def _limit_dtype_group_precision(obj,
 			low: Union[tinygrad.dtype.DType, None],
@@ -234,6 +243,7 @@ def cast_to_supported_and_move_(obj, new_device: Optional[str] = None):
 	return obj
 	
 def to(t, device: str):
+	return move_to_device(t, device)
 	old_device = t.device
 	t = t.clone()
 	new_t = cast_to_supported_and_move_(t, device)
