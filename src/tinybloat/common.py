@@ -240,7 +240,8 @@ def cast_to_supported_and_move_(obj, new_device: Optional[str] = None):
 def to(t, device: str):
 	old_device = t.device
 	t = t.clone()
-	t = cast_to_supported_and_move_(t, device)
+	new_t = cast_to_supported_and_move_(t, device)
+	print(t.device, new_t.device)
 	assert old_device != t.device
 	return t
 
