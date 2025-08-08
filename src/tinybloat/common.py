@@ -237,7 +237,7 @@ def to(t, device: str):
 	old_device = t.device
 	t = t.clone()
 	new_t = cast_to_supported_and_move_(t, device)
-	print(t.device, new_t.device)
+	print(t.device, new_t.device, device)
 	assert old_device != t.device
 	return t
 
