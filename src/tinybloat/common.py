@@ -157,11 +157,8 @@ def _limit_dtype_group_precision(obj,
 						break
 				assert not target_type is None
 				# Now we just need to cast!
-				if isinstance(obj, tinygrad.Tensor):
-					obj = cast(v, target_type).to(new_device)
-				else:
-					sd[k].replace(cast(v, target_type).to(new_device) )
-					assert v.dtype == target_type
+				sd[k].replace(cast(v, target_type).to(new_device) )
+				assert v.dtype == target_type
 			elif v.dtype.itemsize < low_size:
 				# get next step up
 				target_type = None
@@ -170,11 +167,10 @@ def _limit_dtype_group_precision(obj,
 						target_type = ft
 						break
 				assert not target_type is None
-				if isinstance(obj, tinygrad.Tensor):
-					obj = cast(v, target_type).to(new_device)
-				else:
-					sd[k].replace(cast(v, target_type).to(new_device) )
-					assert v.dtype == target_type
+				sd[k].replace(cast(v, target_type).to(new_device) )
+				assert v.dtype == target_type
+	if isinstance(obj, tinygrad.Tensor):
+		return sd["tensor"]
 	return obj
 
 def limit_float_precision(obj,
