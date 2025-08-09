@@ -39,6 +39,13 @@ def _convert_f16_to_f32(t):
 	else:
 		return QTensor(t, GGMLQuantizationType.F16).dequantize()
 
+safe_types = {
+	1: dtypes.uint8,
+	4: dtypes.uint16,
+	8: dtypes.uint32,
+	16: dtypes.uint64
+}
+
 class QTensor:
 	"""
 	A tensor with support for quantized data types, particularly those from GGUF.
@@ -82,9 +89,10 @@ class QTensor:
 		if isinstance(qtype, GGMLQuantizationType):
 			self._block_size, self._type_size = GGML_QUANT_SIZES[qtype]
 		elif isinstance(qtype, tinygrad.dtype.DType):
+			item_size = dtype.itemsize
 			if not device_supports_dtype(device, qtype):
 				# TODO: implement software-level dequantization of regular tinygrad types
-				value = value.bitcast(dtypes.uint8)
+				value = value.bitcast(safe_types[item_size]).realize()
 			else:
 				# just set dequantized as
 				if value_quantized:
