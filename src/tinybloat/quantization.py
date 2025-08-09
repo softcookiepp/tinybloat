@@ -89,10 +89,9 @@ class QTensor:
 		if isinstance(qtype, GGMLQuantizationType):
 			self._block_size, self._type_size = GGML_QUANT_SIZES[qtype]
 		elif isinstance(qtype, tinygrad.dtype.DType):
-			item_size = dtype.itemsize
 			if not device_supports_dtype(device, qtype):
 				# TODO: implement software-level dequantization of regular tinygrad types
-				value = value.bitcast(safe_types[item_size]).realize()
+				value = value.bitcast(safe_types[qtype.itemsize]).realize()
 			else:
 				# just set dequantized as
 				if value_quantized:
