@@ -16,6 +16,8 @@ def group_norm(x, num_groups, weight = None, bias = None, eps = 1.0e-5):
 	# elementwise_affine on channels
 	return x * weight.reshape(1, -1, *[1] * (x.ndim-2)) + bias.reshape(1, -1, *[1] * (x.ndim-2))
 
+TB_SDPA_CPU = True
+
 def scaled_dot_product_attention(query, key, value, attn_mask=None,
 		dropout_p=0.0, is_causal=False, scale=None, enable_gqa=False):
 	assert_same_device(query.device, key, value, attn_mask)
@@ -29,8 +31,16 @@ def scaled_dot_product_attention(query, key, value, attn_mask=None,
 		
 		# then multiply the query by it
 		query = query * scale_factor
-	return query.scaled_dot_product_attention(key, value, attn_mask,
+	if TB_SDPA_CPU:
+		original_device = query.device
+		query, key, value = query.to("CPU"), key.to("CPU"), value.to("CPU")
+		if not attn_mask is None:
+			attn_mask = attn_mask.to("CPU")
+	out = query.scaled_dot_product_attention(key, value, attn_mask,
 		dropout_p, is_causal)
+	if TB_SDPA_CPU:
+		out = out.to(original_device)
+	return out
 
 def gelu(x, approximation = None):
 	if approximation is None:
